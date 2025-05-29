@@ -1,0 +1,25 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-identityconnect-dev-5b174-authRole",
+      "UnauthRoleArn": "arn:aws:iam::799345568976:role/amplify-identityconnect-dev-5b174-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::799345568976:role/amplify-identityconnect-dev-5b174-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-identityconnect-dev-5b174-deployment",
+      "UnauthRoleName": "amplify-identityconnect-dev-5b174-unauthRole",
+      "StackName": "amplify-identityconnect-dev-5b174",
+      "StackId": "arn:aws:cloudformation:us-east-1:799345568976:stack/amplify-identityconnect-dev-5b174/55570cd0-3bd0-11f0-b21d-0affd83cf751",
+      "AmplifyAppId": "d1gc7fyhg8v8d7"
+    },
+    "categories": {
+      "auth": {
+        "identityconnect7af0d4fb": {
+          "userPoolId": "us-east-1_ID8zQGDW7",
+          "userPoolName": "IdentityConnect",
+          "webClientId": "3kfl9g8p032atbj43rnildrrgr",
+          "nativeClientId": "3kfl9g8p032atbj43rnildrrgr"
+        }
+      }
+    }
+  }
+}

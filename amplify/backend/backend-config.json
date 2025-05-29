@@ -1,0 +1,45 @@
+{
+  "auth": {
+    "identityconnect7af0d4fb": {
+      "customAuth": false,
+      "dependsOn": [],
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito",
+      "serviceType": "imported"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_auth_identityconnect7af0d4fb_nativeClientId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "identityconnect7af0d4fb"
+        }
+      ]
+    },
+    "AMPLIFY_auth_identityconnect7af0d4fb_userPoolId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "identityconnect7af0d4fb"
+        }
+      ]
+    },
+    "AMPLIFY_auth_identityconnect7af0d4fb_userPoolName": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "identityconnect7af0d4fb"
+        }
+      ]
+    },
+    "AMPLIFY_auth_identityconnect7af0d4fb_webClientId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "identityconnect7af0d4fb"
+        }
+      ]
+    }
+  }
+}
