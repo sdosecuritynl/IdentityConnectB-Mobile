@@ -254,19 +254,71 @@ class AuthService {
   final String _clientId = '3kfl9g8p032atbj43rnildrrgr';
   final String _redirectUri = 'myapp://callback/';
   final String _identityProvider = 'sdosecurity.com';
+  static const String _uuidKey = 'device_id';
+
+  Future<String> getDeviceId() async {
+    String? uuid = await _storage.read(key: _uuidKey);
+    if (uuid == null) {
+      // Generate a new UUID if none exists
+      uuid = DateTime.now().millisecondsSinceEpoch.toString();
+      await _storage.write(key: _uuidKey, value: uuid);
+      print('[Auth] Generated new device ID: $uuid');
+    } else {
+      print('[Auth] Retrieved existing device ID: $uuid');
+    }
+    return uuid;
+  }
 
   Future<String> getAuthUrl() async {
-    return '$_cognitoUrl/login?response_type=code&client_id=$_clientId&redirect_uri=$_redirectUri&identity_provider=$_identityProvider';
+    final deviceId = await getDeviceId();
+    return '$_cognitoUrl/login?response_type=code&client_id=$_clientId&redirect_uri=$_redirectUri&identity_provider=$_identityProvider&state=$deviceId';
   }
 
   Future<Map<String, dynamic>> exchangeCodeForToken(String code) async {
     try {
-      // TODO: Implement actual token exchange with Cognito
-      // For now, return success with the token from Cognito's response
-      return {
-        'status': 'success',
-        'token': code // The code from Cognito is actually the token in this setup
-      };
+      final deviceId = await getDeviceId();
+      final tokenEndpoint = Uri.parse('$_cognitoUrl/oauth2/token');
+      final response = await http.post(
+        tokenEndpoint,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: {
+          'grant_type': 'authorization_code',
+          'client_id': _clientId,
+          'code': code,
+          'redirect_uri': _redirectUri,
+        },
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw TimeoutException('Token exchange request timed out');
+        },
+      );
+
+      if (response.statusCode != 200) {
+        print('[Auth] Token exchange failed with status ${response.statusCode}');
+        print('[Auth] Error response: ${response.body}');
+        return {
+          'status': 'error',
+          'error': 'Token exchange failed: ${response.statusCode}'
+        };
+      }
+
+      final data = json.decode(response.body);
+      final idToken = data['id_token'];
+      
+      if (idToken != null) {
+        return {
+          'status': 'success',
+          'token': idToken
+        };
+      } else {
+        return {
+          'status': 'error',
+          'error': 'No ID token found in response'
+        };
+      }
     } catch (e) {
       print('[Auth] Error exchanging code for token: $e');
       return {
