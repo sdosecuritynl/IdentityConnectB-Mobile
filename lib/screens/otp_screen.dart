@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
+import 'dart:async';
 
 class OTPScreen extends StatefulWidget {
   final String email;
@@ -23,12 +24,29 @@ class _OTPScreenState extends State<OTPScreen> {
   bool _isLoading = false;
   bool _otpSent = false;
   String? _error;
+  int _resendTimer = 0;
+  Timer? _timer;
 
   @override
   void dispose() {
     _phoneController.dispose();
     _otpController.dispose();
+    _timer?.cancel();
     super.dispose();
+  }
+
+  void _startResendTimer() {
+    _resendTimer = 60;
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendTimer > 0) {
+        setState(() {
+          _resendTimer--;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   Future<void> _sendOTP() async {
@@ -53,6 +71,7 @@ class _OTPScreenState extends State<OTPScreen> {
           if (success) {
             _otpSent = true;
             _error = null;
+            _startResendTimer();
           } else {
             _error = 'Failed to send OTP. Please try again.';
           }
@@ -127,6 +146,10 @@ class _OTPScreenState extends State<OTPScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Device Verification'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -137,52 +160,110 @@ class _OTPScreenState extends State<OTPScreen> {
               'Please verify your device by completing the OTP verification process.',
               style: TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: _phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Phone Number',
-                hintText: 'Enter your phone number',
-                prefixIcon: Icon(Icons.phone),
+            const SizedBox(height: 32),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
               ),
-              keyboardType: TextInputType.phone,
-              enabled: !_otpSent && !_isLoading,
+              child: TextField(
+                controller: _phoneController,
+                decoration: InputDecoration(
+                  labelText: 'Phone Number',
+                  prefixIcon: const Icon(Icons.phone),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                keyboardType: TextInputType.phone,
+                enabled: !_otpSent || _resendTimer == 0,
+              ),
             ),
             const SizedBox(height: 16),
             if (_otpSent) ...[
-              TextField(
-                controller: _otpController,
-                decoration: const InputDecoration(
-                  labelText: 'OTP Code',
-                  hintText: 'Enter the OTP code',
-                  prefixIcon: Icon(Icons.lock),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                keyboardType: TextInputType.number,
-                enabled: !_isLoading,
+                child: TextField(
+                  controller: _otpController,
+                  decoration: InputDecoration(
+                    labelText: 'OTP Code',
+                    prefixIcon: const Icon(Icons.lock),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
             ],
-            if (_error != null) ...[
-              Text(
-                _error!,
-                style: const TextStyle(color: Colors.red),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
-              const SizedBox(height: 16),
-            ],
-            ElevatedButton(
-              onPressed: _isLoading
-                  ? null
-                  : _otpSent
-                      ? _verifyOTP
-                      : _sendOTP,
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(_otpSent ? 'Verify OTP' : 'Send OTP'),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.purple.withOpacity(0.2),
+                    spreadRadius: 1,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : (_otpSent ? _verifyOTP : _sendOTP),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        _otpSent ? 'Verify OTP' : 'Send OTP',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+              ),
             ),
+            if (_otpSent) ...[
+              const SizedBox(height: 16),
+              if (_resendTimer > 0)
+                Text(
+                  'Resend OTP in ${_resendTimer}s',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey),
+                )
+              else
+                TextButton(
+                  onPressed: _sendOTP,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.purple,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text(
+                    'Resend OTP',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+            ],
           ],
         ),
       ),
