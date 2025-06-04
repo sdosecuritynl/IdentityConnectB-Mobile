@@ -54,7 +54,19 @@
     		</array>
   		</dict>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>We use Face ID to securely authenticate you.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>This app uses local network access for secure login and debugging.</string>
+	<string>This app uses local network access for secure login and device registration.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location access is required for device verification and security.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Bluetooth is used for device identification and security verification.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Bluetooth is used for device identification and security verification.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required for Face ID authentication.</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 </dict>
 </plist>
