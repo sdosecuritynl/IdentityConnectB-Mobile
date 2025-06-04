@@ -7,6 +7,7 @@ import '../services/device_service.dart';
 import '../services/storage_service.dart';
 import 'home_screen.dart';
 import 'web_view_screen.dart';
+import 'otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -21,6 +22,44 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
 
   String? _message;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkExistingToken();
+  }
+
+  Future<void> _checkExistingToken() async {
+    try {
+      final token = await _storage.getToken();
+      if (token != null) {
+        print('[Login] Found existing token, verifying device UUID');
+        final uuidResult = await _authService.verifyUUID(token);
+        final decoded = JwtDecoder.decode(token);
+        final email = decoded['email'] ?? decoded['sub'];
+        
+        if (uuidResult['verified'] == true) {
+          print('[Login] Device UUID verified, proceeding to home');
+          if (!mounted) return;
+          await Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => HomeScreen(email: email)),
+          );
+        } else {
+          print('[Login] Device not registered or UUID mismatch, clearing token');
+          await _storage.clearToken();
+          await _storage.clearUUID();
+        }
+      } else {
+        print('[Login] No existing token found');
+      }
+    } catch (e) {
+      print('[Login] Error checking existing token: $e');
+      // Clear token if there was an error
+      await _storage.clearToken();
+      await _storage.clearUUID();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,13 +140,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 final decoded = JwtDecoder.decode(token);
                 final email = decoded['email'] ?? decoded['sub'];
+
+                // Check device UUID after successful SAML auth
+                print('[Login] Verifying device UUID');
+                final uuidResult = await _authService.verifyUUID(token);
                 
-                print('[Login] Authentication successful, proceeding to home');
-                if (!mounted) return;
-                await Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => HomeScreen(email: email)),
-                );
+                if (uuidResult['verified'] == true) {
+                  print('[Login] Device UUID verified, proceeding to home');
+                  if (!mounted) return;
+                  await Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => HomeScreen(email: email)),
+                  );
+                } else {
+                  print('[Login] Device not registered or UUID mismatch, starting OTP flow');
+                  if (!mounted) return;
+                  await Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => OTPScreen(
+                        email: email,
+                        token: token,
+                      ),
+                    ),
+                  );
+                }
               } else {
                 print('[Login] Token exchange failed: ${tokenResult['error']}');
                 if (!mounted) return;

@@ -2,10 +2,14 @@ import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:convert';
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:math' as math;
 
 class CustomSamlAuth {
   final _storage = const FlutterSecureStorage();
@@ -255,23 +259,43 @@ class AuthService {
   final String _redirectUri = 'myapp://callback/';
   final String _identityProvider = 'sdosecurity.com';
   static const String _uuidKey = 'device_id';
+  final String _baseUrl = 'https://d3oyxmwcqyuai5.cloudfront.net';
+
+  Map<String, String> _getAuthHeaders(String token) {
+    // Ensure token is properly formatted without line breaks
+    final cleanToken = token.trim().replaceAll(RegExp(r'\s+'), '');
+    
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $cleanToken',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    };
+  }
 
   Future<String> getDeviceId() async {
     String? uuid = await _storage.read(key: _uuidKey);
     if (uuid == null) {
-      // Generate a new UUID if none exists
-      uuid = DateTime.now().millisecondsSinceEpoch.toString();
+      // Generate a proper UUID instead of timestamp
+      uuid = const Uuid().v4();
       await _storage.write(key: _uuidKey, value: uuid);
       print('[Auth] Generated new device ID: $uuid');
     } else {
-      print('[Auth] Retrieved existing device ID: $uuid');
+      // If the stored UUID is a timestamp (old format), generate a new UUID
+      if (uuid.length <= 13 && int.tryParse(uuid) != null) {
+        uuid = const Uuid().v4();
+        await _storage.write(key: _uuidKey, value: uuid);
+        print('[Auth] Converted old timestamp ID to UUID: $uuid');
+      } else {
+        print('[Auth] Retrieved existing device ID: $uuid');
+      }
     }
     return uuid;
   }
 
   Future<String> getAuthUrl() async {
     final deviceId = await getDeviceId();
-    return '$_cognitoUrl/login?response_type=code&client_id=$_clientId&redirect_uri=$_redirectUri&identity_provider=$_identityProvider&state=$deviceId';
+    return '$_cognitoUrl/login?response_type=code&client_id=$_clientId&redirect_uri=$_redirectUri&identity_provider=$_identityProvider&state=$deviceId&prompt=login&max_age=0&autofocus=false';
   }
 
   Future<Map<String, dynamic>> exchangeCodeForToken(String code) async {
@@ -325,6 +349,171 @@ class AuthService {
         'status': 'error',
         'error': e.toString()
       };
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyUUID(String token) async {
+    print('[Auth] Verifying UUID with backend');
+    try {
+      final uuid = await getDeviceId();
+      final requestBody = jsonEncode({'uuid4': uuid});
+      print('[Auth] Request body: $requestBody');
+      
+      final headers = _getAuthHeaders(token);
+      print('[Auth] Using headers: $headers');
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/checkDeviceUUID'),
+        headers: headers,
+        body: requestBody,
+      );
+
+      print('[Auth] Response status: ${response.statusCode}');
+      print('[Auth] Response headers: ${response.headers}');
+      print('[Auth] Response body: ${response.body}');
+
+      final result = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && result['verified'] == true) {
+        return {
+          'status': 'verified',
+          'verified': true
+        };
+      }
+      
+      if (result['error'] == 'No device registration found for user') {
+        return {
+          'status': 'not_registered',
+          'verified': false,
+          'error': result['error']
+        };
+      } else if (result['error'] == 'UUID4 mismatch') {
+        return {
+          'status': 'mismatch',
+          'verified': false,
+          'error': result['error']
+        };
+      }
+
+      return {
+        'status': 'error',
+        'verified': false,
+        'error': result['error'] ?? 'Unknown error occurred'
+      };
+    } catch (e) {
+      print('[Auth] Error verifying UUID: $e');
+      return {
+        'status': 'error',
+        'verified': false,
+        'error': 'Network or server error occurred'
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>?> registerDevice(String email, String token) async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      String deviceName = 'Unknown';
+      String deviceId = const Uuid().v4(); // Generate a new UUID for deviceId
+
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        deviceName = androidInfo.model ?? 'Android Device';
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        deviceName = '${iosInfo.name} ${iosInfo.model}' ?? 'iOS Device';
+      }
+
+      // Get existing UUID or generate a new one if it doesn't exist
+      final uuid4 = await getDeviceId();
+
+      final body = {
+        'email': email,
+        'deviceName': deviceName,
+        'deviceId': deviceId,
+        'uuid4': uuid4,
+      };
+
+      print('[Auth] Registering device with body: $body');
+      final response = await http.post(
+        Uri.parse('$_baseUrl/registerDevice'),
+        headers: _getAuthHeaders(token),
+        body: jsonEncode(body),
+      );
+
+      print('[Auth] Registration response status: ${response.statusCode}');
+      print('[Auth] Registration response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['registered'] == false) {
+          print('[Auth] Registration failed, but keeping UUID for consistency');
+        }
+        return data;
+      } else {
+        print('[Auth] Registration failed with status ${response.statusCode}: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('[Auth] Error during registration: $e');
+      return null;
+    }
+  }
+
+  Future<bool> sendOTP(String phoneNumber, String token) async {
+    try {
+      print('[Auth] Sending OTP for phone: $phoneNumber');
+      print('[Auth] Using token (first 50 chars): ${token.substring(0, math.min(50, token.length))}...');
+      
+      final headers = _getAuthHeaders(token);
+      final body = jsonEncode({'phoneNumber': phoneNumber});
+      print('[Auth] Request body: $body');
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/sendOtp'),
+        headers: headers,
+        body: body,
+      );
+
+      print('[Auth] Send OTP response status: ${response.statusCode}');
+      print('[Auth] Send OTP response headers: ${response.headers}');
+      print('[Auth] Send OTP response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+      print('[Auth] Send OTP failed: ${response.body}');
+      return false;
+    } catch (e) {
+      print('[Auth] Error sending OTP: $e');
+      return false;
+    }
+  }
+
+  Future<bool> verifyOTP(String phoneNumber, String otp, String token) async {
+    try {
+      print('[Auth] Verifying OTP for phone: $phoneNumber');
+      final response = await http.post(
+        Uri.parse('$_baseUrl/verifyOtp'),
+        headers: _getAuthHeaders(token),
+        body: jsonEncode({
+          'phoneNumber': phoneNumber,
+          'otp': otp,
+        }),
+      );
+
+      print('[Auth] Verify OTP response status: ${response.statusCode}');
+      print('[Auth] Verify OTP response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['verified'] == true;
+      }
+      print('[Auth] Verify OTP failed: ${response.body}');
+      return false;
+    } catch (e) {
+      print('[Auth] Error verifying OTP: $e');
+      return false;
     }
   }
 }

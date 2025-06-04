@@ -17,7 +17,7 @@ class WebViewScreen extends StatefulWidget {
 
 class _WebViewScreenState extends State<WebViewScreen> {
   late final WebViewController _controller;
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -26,27 +26,25 @@ class _WebViewScreenState extends State<WebViewScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-            });
-          },
-          onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
-          },
           onNavigationRequest: (NavigationRequest request) {
-            if (request.url.startsWith('myapp://callback')) {
+            if (request.url.startsWith('myapp://')) {
               final uri = Uri.parse(request.url);
               final code = uri.queryParameters['code'];
               if (code != null) {
                 widget.onCodeReceived(code);
-                Navigator.of(context).pop();
               }
               return NavigationDecision.prevent;
             }
             return NavigationDecision.navigate;
+          },
+          onPageFinished: (String url) {
+            _controller.runJavaScript('''
+              document.activeElement?.blur();
+              var inputs = document.getElementsByTagName('input');
+              for(var i = 0; i < inputs.length; i++) {
+                inputs[i].blur();
+              }
+            ''');
           },
         ),
       )
@@ -56,21 +54,22 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign In'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller),
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            WebViewWidget(
+              controller: _controller,
             ),
-        ],
+            Positioned(
+              top: 16,
+              left: 16,
+              child: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
