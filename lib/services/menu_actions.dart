@@ -37,11 +37,17 @@ class MenuActions {
   // Handle regular sign out (with Cognito call)
   Future<void> signOut(BuildContext context) async {
     print('[MenuActions] Starting sign out process');
+    
+    // Store navigator state before async operations
+    final navigator = Navigator.of(context);
+    
+    // Close drawer first
+    navigator.pop();
+    
     await _authService.signOut();
-    if (context.mounted) {
-      print('[MenuActions] Navigating to login screen');
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    }
+    
+    print('[MenuActions] Navigating to login screen');
+    navigator.pushNamedAndRemoveUntil('/', (route) => false);
   }
 
   // Show delete account confirmation dialog
