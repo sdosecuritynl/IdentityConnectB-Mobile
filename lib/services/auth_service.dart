@@ -20,11 +20,10 @@ class CustomSamlAuth {
   final String cognitoDomain = 'us-east-1id8zqgdw7.auth.us-east-1.amazoncognito.com';
   final String redirectUri = 'myapp://callback/';
   final String signOutRedirectUri = 'myapp://signout/';
-  final String provider = 'sdosecurity.com';
 
   Future<String?> signIn() async {
     final url =
-        'https://$cognitoDomain/login?response_type=code&client_id=$clientId&redirect_uri=$redirectUri&identity_provider=$provider';
+        'https://$cognitoDomain/login?response_type=code&client_id=$clientId&redirect_uri=$redirectUri';
 
     try {
       print('[Auth] Starting authentication flow with URL: $url');
