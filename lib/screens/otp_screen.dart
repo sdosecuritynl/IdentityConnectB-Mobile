@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'dart:async';
 
@@ -144,35 +145,44 @@ class _OTPScreenState extends State<OTPScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Device Verification'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        title: Text('Device Verification', style: AppTheme.titleMedium),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppTheme.primaryBlue),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Please verify your device by completing the OTP verification process.',
-              style: TextStyle(fontSize: 16),
+              style: AppTheme.bodyText,
             ),
             const SizedBox(height: 32),
-            Container(
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
+            Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: AppTheme.primaryBlue,
+                  secondary: AppTheme.primaryBlue,
+                ),
+                textSelectionTheme: TextSelectionThemeData(
+                  cursorColor: AppTheme.primaryBlue,
+                  selectionColor: AppTheme.primaryBlue.withOpacity(0.2),
+                  selectionHandleColor: AppTheme.primaryBlue,
+                ),
               ),
               child: TextField(
                 controller: _phoneController,
-                decoration: InputDecoration(
+                decoration: AppTheme.textFieldDecoration.copyWith(
                   labelText: 'Phone Number',
-                  prefixIcon: const Icon(Icons.phone),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  prefixIcon: Icon(Icons.phone, color: AppTheme.primaryBlue),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppTheme.primaryBlue),
+                  ),
                 ),
                 keyboardType: TextInputType.phone,
                 enabled: !_otpSent || _resendTimer == 0,
@@ -180,18 +190,27 @@ class _OTPScreenState extends State<OTPScreen> {
             ),
             const SizedBox(height: 16),
             if (_otpSent) ...[
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
+              Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: Theme.of(context).colorScheme.copyWith(
+                    primary: AppTheme.primaryBlue,
+                    secondary: AppTheme.primaryBlue,
+                  ),
+                  textSelectionTheme: TextSelectionThemeData(
+                    cursorColor: AppTheme.primaryBlue,
+                    selectionColor: AppTheme.primaryBlue.withOpacity(0.2),
+                    selectionHandleColor: AppTheme.primaryBlue,
+                  ),
                 ),
                 child: TextField(
                   controller: _otpController,
-                  decoration: InputDecoration(
+                  decoration: AppTheme.textFieldDecoration.copyWith(
                     labelText: 'OTP Code',
-                    prefixIcon: const Icon(Icons.lock),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    prefixIcon: Icon(Icons.lock, color: AppTheme.primaryBlue),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.primaryBlue),
+                    ),
                   ),
                   keyboardType: TextInputType.number,
                 ),
@@ -203,33 +222,16 @@ class _OTPScreenState extends State<OTPScreen> {
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
                   _error!,
-                  style: const TextStyle(color: Colors.red),
+                  style: AppTheme.bodyText.copyWith(color: Colors.red),
                 ),
               ),
             Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.purple.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+              decoration: AppTheme.buttonDecoration,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : (_otpSent ? _verifyOTP : _sendOTP),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                ),
+                style: AppTheme.primaryButtonStyle,
                 child: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
@@ -237,33 +239,31 @@ class _OTPScreenState extends State<OTPScreen> {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : Text(
-                        _otpSent ? 'Verify OTP' : 'Send OTP',
-                        style: const TextStyle(fontSize: 16),
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _otpSent ? Icons.check_circle : Icons.send,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            _otpSent ? 'Verify OTP' : 'Send OTP',
+                            style: AppTheme.buttonText.copyWith(color: Colors.white),
+                          ),
+                        ],
                       ),
               ),
             ),
-            if (_otpSent) ...[
-              const SizedBox(height: 16),
-              if (_resendTimer > 0)
-                Text(
-                  'Resend OTP in ${_resendTimer}s',
+            if (_otpSent && _resendTimer > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text(
+                  'Resend code in $_resendTimer seconds',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.grey),
-                )
-              else
-                TextButton(
-                  onPressed: _sendOTP,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.purple,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text(
-                    'Resend OTP',
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  style: AppTheme.bodyText,
                 ),
-            ],
+              ),
           ],
         ),
       ),

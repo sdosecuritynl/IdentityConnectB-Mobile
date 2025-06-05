@@ -7,6 +7,12 @@ class HomeScreen extends StatelessWidget {
   final String email;
   final MenuActions _menuActions = MenuActions();
 
+  // Define brand colors
+  static const Color primaryBlue = Color(0xFF0066CC);  // Main blue from logo
+  static const Color accentBlue = Color(0xFF00A3FF);   // Lighter blue accent
+  static const Color textDark = Color(0xFF1A1F36);     // Dark text color
+  static const Color textGrey = Color(0xFF6B7280);     // Secondary text color
+
   HomeScreen({super.key, required this.email});
 
   @override
@@ -24,10 +30,10 @@ class HomeScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Logged in as',
                       style: TextStyle(
-                        color: Colors.grey,
+                        color: textGrey,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -35,10 +41,10 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       email,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: textDark,
                       ),
                       softWrap: true,
                       overflow: TextOverflow.visible,
@@ -46,30 +52,30 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const Divider(thickness: 1),
+              Divider(thickness: 1, color: textGrey.withOpacity(0.2)),
               ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Home'),
+                leading: Icon(Icons.home, color: primaryBlue),
+                title: Text('Home', style: TextStyle(color: textDark)),
                 onTap: () => Navigator.pop(context),
               ),
               ListTile(
-                leading: const Icon(Icons.security),
-                title: const Text('Identity Center'),
+                leading: Icon(Icons.security, color: primaryBlue),
+                title: Text('Identity Center', style: TextStyle(color: textDark)),
                 onTap: () => _menuActions.goToIdentityCenter(context, email),
               ),
               ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text('My Information'),
+                leading: Icon(Icons.person, color: primaryBlue),
+                title: Text('My Information', style: TextStyle(color: textDark)),
                 onTap: () => _menuActions.goToUserInfo(context, email),
               ),
               ListTile(
-                leading: const Icon(Icons.delete_forever),
-                title: const Text('Delete Account'),
+                leading: Icon(Icons.delete_forever, color: primaryBlue),
+                title: Text('Delete Account', style: TextStyle(color: textDark)),
                 onTap: () => _menuActions.showDeleteConfirmation(context),
               ),
               ListTile(
-                leading: const Icon(Icons.logout),
-                title: const Text('Sign Out'),
+                leading: Icon(Icons.logout, color: primaryBlue),
+                title: Text('Sign Out', style: TextStyle(color: textDark)),
                 onTap: () => _menuActions.signOut(context),
               ),
             ],
@@ -80,8 +86,18 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           children: [
             // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: textGrey.withOpacity(0.1),
+                    offset: const Offset(0, 2),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -89,23 +105,24 @@ class HomeScreen extends StatelessWidget {
                     children: [
                       Image.asset(
                         'assets/logo.png',
-                        height: 50,
-                        width: 50,
+                        height: 40,
+                        width: 40,
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
+                      const SizedBox(width: 12),
+                      Text(
                         'IdentityConnect.io',
                         style: TextStyle(
-                          fontSize: 25,
+                          fontSize: 22,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                          color: primaryBlue,
+                          letterSpacing: -0.5,
                         ),
                       ),
                     ],
                   ),
                   Builder(
                     builder: (context) => IconButton(
-                      icon: const Icon(Icons.menu, size: 39, color: Colors.black87),
+                      icon: Icon(Icons.menu, size: 28, color: primaryBlue),
                       onPressed: () => Scaffold.of(context).openDrawer(),
                     ),
                   ),
@@ -122,24 +139,30 @@ class HomeScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const _InfoSection(
+                          _InfoSection(
                             title: 'Verify Identity Before You Trust',
                             description: 'Always verify before making critical actions.\nConfirm the identity of your colleague or vendor - fast, secure, and reliable.',
                             icon: Icons.verified_user,
+                            iconColor: primaryBlue,
+                            backgroundColor: accentBlue.withOpacity(0.05),
                           ),
-                          const SizedBox(height: 32),
-                          const _InfoSection(
+                          const SizedBox(height: 24),
+                          _InfoSection(
                             title: 'Employee to Employee Communication',
                             description: "When a colleague reaches out with a sensitive request use IdentityConnect to verify it's really them.",
                             icon: Icons.people,
+                            iconColor: primaryBlue,
+                            backgroundColor: accentBlue.withOpacity(0.05),
                           ),
-                          const SizedBox(height: 32),
-                          const _InfoSection(
+                          const SizedBox(height: 24),
+                          _InfoSection(
                             title: 'Employee to Vendor Communication',
                             description: 'Before processing requesst from a vendor,\nverify their identity in real time with IdentityConnect.',
                             icon: Icons.business,
+                            iconColor: primaryBlue,
+                            backgroundColor: accentBlue.withOpacity(0.05),
                           ),
-                          const SizedBox(height: 100), // Space for the button
+                          const SizedBox(height: 100),
                         ],
                       ),
                     ),
@@ -153,7 +176,7 @@ class HomeScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.purple.withOpacity(0.3),
+                            color: primaryBlue.withOpacity(0.3),
                             spreadRadius: 0,
                             blurRadius: 10,
                             offset: const Offset(0, 4),
@@ -163,9 +186,10 @@ class HomeScreen extends StatelessWidget {
                       child: ElevatedButton(
                         onPressed: () => _menuActions.goToIdentityCenter(context, email),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
+                          backgroundColor: primaryBlue,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
@@ -179,7 +203,8 @@ class HomeScreen extends StatelessWidget {
                               'Identity Center',
                               style: TextStyle(
                                 fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.5,
                               ),
                             ),
                           ],
@@ -201,11 +226,15 @@ class _InfoSection extends StatelessWidget {
   final String title;
   final String description;
   final IconData icon;
+  final Color iconColor;
+  final Color backgroundColor;
 
   const _InfoSection({
     required this.title,
     required this.description,
     required this.icon,
+    required this.iconColor,
+    required this.backgroundColor,
   });
 
   @override
@@ -213,16 +242,12 @@ class _InfoSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(
+          color: iconColor.withOpacity(0.1),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,12 +257,12 @@ class _InfoSection extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.1),
+                  color: iconColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   icon,
-                  color: Colors.purple,
+                  color: iconColor,
                   size: 24,
                 ),
               ),
@@ -245,9 +270,11 @@ class _InfoSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: HomeScreen.textDark,
+                    letterSpacing: -0.5,
                   ),
                 ),
               ),
@@ -257,9 +284,10 @@ class _InfoSection extends StatelessWidget {
           Text(
             description,
             style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
+              fontSize: 15,
+              color: HomeScreen.textGrey,
               height: 1.5,
+              letterSpacing: -0.3,
             ),
           ),
         ],

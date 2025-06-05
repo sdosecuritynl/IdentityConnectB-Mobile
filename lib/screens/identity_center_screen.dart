@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/menu_actions.dart';
-import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class IdentityCenterScreen extends StatefulWidget {
   final String email;
@@ -12,64 +12,7 @@ class IdentityCenterScreen extends StatefulWidget {
 
 class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
   final MenuActions _menuActions = MenuActions();
-  final ApiService _apiService = ApiService();
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  bool _isLoading = false;
-
-  Future<void> _submitP2PRequest() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    final recipientEmail = _emailController.text.trim();
-
-    try {
-      final success = await _apiService.submitP2PRequest(
-        context,
-        recipientEmail,
-      );
-
-      if (mounted) {
-        if (success) {
-          _emailController.clear();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Verification message successfully sent to $recipientEmail'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to send P2P request'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error sending P2P request: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
 
   @override
   void dispose() {
@@ -92,10 +35,10 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Logged in as',
                       style: TextStyle(
-                        color: Colors.grey,
+                        color: AppTheme.textGrey,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -103,10 +46,10 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                     const SizedBox(height: 4),
                     Text(
                       widget.email,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppTheme.textDark,
                       ),
                       softWrap: true,
                       overflow: TextOverflow.visible,
@@ -114,30 +57,30 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                   ],
                 ),
               ),
-              const Divider(thickness: 1),
+              Divider(thickness: 1, color: AppTheme.textGrey.withOpacity(0.2)),
               ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Home'),
+                leading: Icon(Icons.home, color: AppTheme.primaryBlue),
+                title: Text('Home', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => _menuActions.goToHome(context, widget.email),
               ),
               ListTile(
-                leading: const Icon(Icons.security),
-                title: const Text('Identity Center'),
+                leading: Icon(Icons.security, color: AppTheme.primaryBlue),
+                title: Text('Identity Center', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => Navigator.pop(context),
               ),
               ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text('My Information'),
+                leading: Icon(Icons.person, color: AppTheme.primaryBlue),
+                title: Text('My Information', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => _menuActions.goToUserInfo(context, widget.email),
               ),
               ListTile(
-                leading: const Icon(Icons.delete_forever),
-                title: const Text('Delete Account'),
+                leading: Icon(Icons.delete_forever, color: AppTheme.primaryBlue),
+                title: Text('Delete Account', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => _menuActions.showDeleteConfirmation(context),
               ),
               ListTile(
-                leading: const Icon(Icons.logout),
-                title: const Text('Sign Out'),
+                leading: Icon(Icons.logout, color: AppTheme.primaryBlue),
+                title: Text('Sign Out', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => _menuActions.signOut(context),
               ),
             ],
@@ -145,124 +88,123 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: AppTheme.headerShadow,
+              ),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
                       Image.asset(
                         'assets/logo.png',
-                        height: 50,
-                        width: 50,
+                        height: 40,
+                        width: 40,
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
+                      const SizedBox(width: 12),
+                      Text(
                         'IdentityConnect.io',
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
+                        style: AppTheme.titleLarge,
                       ),
                     ],
                   ),
                   Builder(
                     builder: (context) => IconButton(
-                      icon: const Icon(Icons.menu, size: 39, color: Colors.black87),
+                      icon: Icon(Icons.menu, size: 28, color: AppTheme.primaryBlue),
                       onPressed: () => Scaffold.of(context).openDrawer(),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
-              // Content
-              const Text(
-                'Identity Center',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 24),
-              // P2P Request Form
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Send P2P Request',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Identity Center',
+                      style: AppTheme.titleMedium.copyWith(fontSize: 20),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Verify the identity of your colleagues and vendors in real-time.',
+                      style: AppTheme.bodyText,
+                    ),
+                    const SizedBox(height: 32),
+                    Container(
+                      decoration: AppTheme.cardDecoration,
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Verify Identity',
+                            style: AppTheme.titleMedium,
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Recipient Email',
-                            hintText: 'Enter email address',
-                            border: OutlineInputBorder(),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter an email address';
-                            }
-                            if (!value.contains('@') || !value.contains('.')) {
-                              return 'Please enter a valid email address';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _isLoading ? null : _submitP2PRequest,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                          const SizedBox(height: 16),
+                          Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: Theme.of(context).colorScheme.copyWith(
+                                primary: AppTheme.primaryBlue,
+                                secondary: AppTheme.primaryBlue,
+                              ),
+                              textSelectionTheme: TextSelectionThemeData(
+                                cursorColor: AppTheme.primaryBlue,
+                                selectionColor: AppTheme.primaryBlue.withOpacity(0.2),
+                                selectionHandleColor: AppTheme.primaryBlue,
+                              ),
+                            ),
+                            child: TextField(
+                              controller: _emailController,
+                              decoration: AppTheme.textFieldDecoration.copyWith(
+                                labelText: 'Enter email to verify',
+                                prefixIcon: Icon(Icons.email, color: AppTheme.primaryBlue),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: AppTheme.primaryBlue),
+                                ),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                              style: TextStyle(color: AppTheme.textDark),
                             ),
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          const SizedBox(height: 24),
+                          Container(
+                            decoration: AppTheme.buttonDecoration,
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                // Handle verify action
+                              },
+                              style: AppTheme.primaryButtonStyle,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.verified_user, size: 24),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Verify Now',
+                                    style: AppTheme.buttonText.copyWith(color: Colors.white),
                                   ),
-                                )
-                              : const Text(
-                                  'Send Request',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                        ),
-                      ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

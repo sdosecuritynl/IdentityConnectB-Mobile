@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import '../theme/app_theme.dart';
 
 class WebViewScreen extends StatefulWidget {
   final String url;
@@ -54,18 +55,27 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
             WebViewWidget(
               controller: _controller,
             ),
-            Positioned(
-              top: 16,
-              left: 16,
-              child: IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.of(context).pop(),
+            Align(
+              alignment: Alignment.topRight,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: AppTheme.headerShadow,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: AppTheme.primaryBlue),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
               ),
             ),
           ],

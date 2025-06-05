@@ -5,6 +5,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import '../services/auth_service.dart';
 import '../services/device_service.dart';
 import '../services/storage_service.dart';
+import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'web_view_screen.dart';
 import 'otp_screen.dart';
@@ -75,27 +76,54 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset('assets/logo.png', height: 120),
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'IdentityConnect.io\nBusiness',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: AppTheme.titleLarge.copyWith(fontSize: 24),
                 ),
                 const SizedBox(height: 40),
-                ElevatedButton(
-                  onPressed: _handleSSOLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(color: Colors.black12),
+                Container(
+                  decoration: AppTheme.buttonDecoration.copyWith(
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.textGrey.withOpacity(0.2),
+                        spreadRadius: 0,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton(
+                    onPressed: _handleSSOLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: BorderSide(color: AppTheme.textGrey.withOpacity(0.2)),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.security, color: AppTheme.primaryBlue, size: 24),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Login with your company SSO',
+                          style: AppTheme.buttonText.copyWith(color: AppTheme.textDark),
+                        ),
+                      ],
                     ),
                   ),
-                  child: const Text('Login with your company SSO', style: TextStyle(color: Colors.black)),
                 ),
                 const SizedBox(height: 20),
                 if (_message != null)
-                  Text(_message!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black87)),
+                  Text(
+                    _message!,
+                    textAlign: TextAlign.center,
+                    style: AppTheme.bodyText.copyWith(color: AppTheme.textDark),
+                  ),
               ],
             ),
           ),

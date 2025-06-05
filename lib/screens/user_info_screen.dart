@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/menu_actions.dart';
 import '../services/device_service.dart';
 import '../services/api_service.dart';
+import '../theme/app_theme.dart';
 
 class UserInfoScreen extends StatefulWidget {
   final String email;
@@ -86,10 +87,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Logged in as',
                       style: TextStyle(
-                        color: Colors.grey,
+                        color: AppTheme.textGrey,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -97,10 +98,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                     const SizedBox(height: 4),
                     Text(
                       widget.email,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppTheme.textDark,
                       ),
                       softWrap: true,
                       overflow: TextOverflow.visible,
@@ -108,30 +109,30 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                   ],
                 ),
               ),
-              const Divider(thickness: 1),
+              Divider(thickness: 1, color: AppTheme.textGrey.withOpacity(0.2)),
               ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Home'),
+                leading: Icon(Icons.home, color: AppTheme.primaryBlue),
+                title: Text('Home', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => _menuActions.goToHome(context, widget.email),
               ),
               ListTile(
-                leading: const Icon(Icons.security),
-                title: const Text('Identity Center'),
+                leading: Icon(Icons.security, color: AppTheme.primaryBlue),
+                title: Text('Identity Center', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => _menuActions.goToIdentityCenter(context, widget.email),
               ),
               ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text('My Information'),
+                leading: Icon(Icons.person, color: AppTheme.primaryBlue),
+                title: Text('My Information', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => Navigator.pop(context),
               ),
               ListTile(
-                leading: const Icon(Icons.delete_forever),
-                title: const Text('Delete Account'),
+                leading: Icon(Icons.delete_forever, color: AppTheme.primaryBlue),
+                title: Text('Delete Account', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => _menuActions.showDeleteConfirmation(context),
               ),
               ListTile(
-                leading: const Icon(Icons.logout),
-                title: const Text('Sign Out'),
+                leading: Icon(Icons.logout, color: AppTheme.primaryBlue),
+                title: Text('Sign Out', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => _menuActions.signOut(context),
               ),
             ],
@@ -139,117 +140,125 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            children: [
-              // Header
-              Row(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: AppTheme.headerShadow,
+              ),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
                     children: [
                       Image.asset(
                         'assets/logo.png',
-                        height: 50,
-                        width: 50,
+                        height: 40,
+                        width: 40,
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
+                      const SizedBox(width: 12),
+                      Text(
                         'IdentityConnect.io',
-                        style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
+                        style: AppTheme.titleLarge,
                       ),
                     ],
                   ),
                   Builder(
                     builder: (context) => IconButton(
-                      icon: const Icon(Icons.menu, size: 39, color: Colors.black87),
+                      icon: Icon(Icons.menu, size: 28, color: AppTheme.primaryBlue),
                       onPressed: () => Scaffold.of(context).openDrawer(),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
-              // Content
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _error != null
-                        ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-                        : SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'My Information',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                _buildInfoCard(),
-                              ],
-                            ),
-                          ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow('Email', _userInfo?['user']?['email'] ?? 'N/A'),
-            _buildInfoRow(
-              'Registered Date',
-              _formatDate(_userInfo?['user']?['signupTimestamp']),
             ),
-            _buildInfoRow('Device Name', _deviceName ?? 'N/A'),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                      ? Center(
+                          child: Text(
+                            _error!,
+                            style: AppTheme.bodyText.copyWith(color: Colors.red),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'My Information',
+                                style: AppTheme.titleMedium.copyWith(fontSize: 20),
+                              ),
+                              const SizedBox(height: 24),
+                              Container(
+                                decoration: AppTheme.cardDecoration,
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'User Details',
+                                      style: AppTheme.titleMedium,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildInfoRow('Email', widget.email),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Container(
+                                decoration: AppTheme.cardDecoration,
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Device Information',
+                                      style: AppTheme.titleMedium,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    _buildInfoRow('Device Name', _deviceName ?? 'N/A'),
+                                    _buildInfoRow('Device ID', _deviceId ?? 'N/A'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {int? maxLines}) {
+  Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.grey,
+            style: TextStyle(
+              fontSize: 13,
+              color: AppTheme.textGrey,
               fontWeight: FontWeight.w500,
-              fontSize: 14,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
+            style: TextStyle(
               fontSize: 16,
+              color: AppTheme.textDark,
+              fontWeight: FontWeight.w500,
             ),
-            maxLines: maxLines,
-            overflow: maxLines != null ? TextOverflow.ellipsis : null,
           ),
         ],
       ),
