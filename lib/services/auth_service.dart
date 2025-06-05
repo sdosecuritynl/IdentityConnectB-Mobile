@@ -147,11 +147,16 @@ class CustomSamlAuth {
   Future<void> clearLocalData() async {
     try {
       print('[ClearLocal] Clearing secure storage...');
-      await _storage.deleteAll();
+      await _storage.delete(key: _tokenKey);
       
       print('[ClearLocal] Clearing shared preferences...');
       final prefs = await SharedPreferences.getInstance();
+      // Clear everything except device ID
+      final deviceId = await _storage.read(key: _uuidKey);
       await prefs.clear();
+      if (deviceId != null) {
+        await _storage.write(key: _uuidKey, value: deviceId);
+      }
       
       print('[ClearLocal] All local data cleared');
     } catch (e) {
@@ -192,11 +197,16 @@ class CustomSamlAuth {
   Future<void> signOutLocally(BuildContext context) async {
     try {
       print('[LocalSignOut] Clearing secure storage...');
-      await _storage.deleteAll();
+      await _storage.delete(key: _tokenKey);
       
       print('[LocalSignOut] Clearing shared preferences...');
       final prefs = await SharedPreferences.getInstance();
+      // Clear everything except device ID
+      final deviceId = await _storage.read(key: _uuidKey);
       await prefs.clear();
+      if (deviceId != null) {
+        await _storage.write(key: _uuidKey, value: deviceId);
+      }
       
       print('[LocalSignOut] All local data cleared');
 
