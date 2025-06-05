@@ -69,16 +69,6 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                 onTap: () => Navigator.pop(context),
               ),
               ListTile(
-                leading: Icon(Icons.person, color: AppTheme.primaryBlue),
-                title: Text('My Information', style: TextStyle(color: AppTheme.textDark)),
-                onTap: () => _menuActions.goToUserInfo(context, widget.email),
-              ),
-              ListTile(
-                leading: Icon(Icons.delete_forever, color: AppTheme.primaryBlue),
-                title: Text('Delete Account', style: TextStyle(color: AppTheme.textDark)),
-                onTap: () => _menuActions.showDeleteConfirmation(context),
-              ),
-              ListTile(
                 leading: Icon(Icons.logout, color: AppTheme.primaryBlue),
                 title: Text('Sign Out', style: TextStyle(color: AppTheme.textDark)),
                 onTap: () => _menuActions.signOut(context),

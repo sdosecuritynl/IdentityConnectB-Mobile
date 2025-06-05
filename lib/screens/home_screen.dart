@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/menu_actions.dart';
-import 'user_info_screen.dart';
 import 'identity_center_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -62,16 +61,6 @@ class HomeScreen extends StatelessWidget {
                 leading: Icon(Icons.security, color: primaryBlue),
                 title: Text('Identity Center', style: TextStyle(color: textDark)),
                 onTap: () => _menuActions.goToIdentityCenter(context, email),
-              ),
-              ListTile(
-                leading: Icon(Icons.person, color: primaryBlue),
-                title: Text('My Information', style: TextStyle(color: textDark)),
-                onTap: () => _menuActions.goToUserInfo(context, email),
-              ),
-              ListTile(
-                leading: Icon(Icons.delete_forever, color: primaryBlue),
-                title: Text('Delete Account', style: TextStyle(color: textDark)),
-                onTap: () => _menuActions.showDeleteConfirmation(context),
               ),
               ListTile(
                 leading: Icon(Icons.logout, color: primaryBlue),
