@@ -121,39 +121,36 @@ class HomeScreen extends StatelessWidget {
             // Content
             Expanded(
               child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _InfoSection(
-                            title: 'Verify Identity Before You Trust',
-                            description: 'Always verify before making critical actions.\nConfirm the identity of your colleague or vendor - fast, secure, and reliable.',
-                            icon: Icons.verified_user,
-                            iconColor: primaryBlue,
-                            backgroundColor: accentBlue.withOpacity(0.05),
-                          ),
-                          const SizedBox(height: 24),
-                          _InfoSection(
-                            title: 'Employee to Employee Communication',
-                            description: "When a colleague reaches out with a sensitive request use IdentityConnect to verify it's really them.",
-                            icon: Icons.people,
-                            iconColor: primaryBlue,
-                            backgroundColor: accentBlue.withOpacity(0.05),
-                          ),
-                          const SizedBox(height: 24),
-                          _InfoSection(
-                            title: 'Employee to Vendor Communication',
-                            description: 'Before processing requesst from a vendor,\nverify their identity in real time with IdentityConnect.',
-                            icon: Icons.business,
-                            iconColor: primaryBlue,
-                            backgroundColor: accentBlue.withOpacity(0.05),
-                          ),
-                          const SizedBox(height: 100),
-                        ],
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 96.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _InfoSection(
+                          title: 'Verify Identity Before You Trust',
+                          description: 'Always verify before making critical actions.\nConfirm the identity of your colleague or vendor - fast, secure, and reliable.',
+                          icon: Icons.verified_user,
+                          iconColor: primaryBlue,
+                          backgroundColor: accentBlue.withOpacity(0.05),
+                        ),
+                        _InfoSection(
+                          title: 'Employee to Employee Communication',
+                          description: "When a colleague reaches out with a sensitive request use IdentityConnect to verify it's really them.",
+                          icon: Icons.people,
+                          iconColor: primaryBlue,
+                          backgroundColor: accentBlue.withOpacity(0.05),
+                        ),
+                        _InfoSection(
+                          title: 'Employee to Vendor Communication',
+                          description: 'Before processing requesst from a vendor,\nverify their identity in real time with IdentityConnect.',
+                          icon: Icons.business,
+                          iconColor: primaryBlue,
+                          backgroundColor: accentBlue.withOpacity(0.05),
+                        ),
+                      ],
                     ),
                   ),
                   Positioned(
