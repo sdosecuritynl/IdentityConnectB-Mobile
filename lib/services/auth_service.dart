@@ -167,28 +167,33 @@ class CustomSamlAuth {
   // Regular sign out that calls Cognito
   Future<void> signOut() async {
     try {
-      // Clear local data first
-      await clearLocalData();
+      print('[SignOut] Starting sign out process');
       
-      // Then handle Cognito sign-out
+      // Call Cognito sign-out first
       final signOutUrl = 'https://$cognitoDomain/logout?client_id=$clientId&logout_uri=$signOutRedirectUri';
       print('[SignOut] Initiating sign out with URL: $signOutUrl');
       
-      // Set a timeout for the web auth
       try {
-        await Future.delayed(const Duration(seconds: 1));
+        // Wait for Cognito logout to complete
         await FlutterWebAuth2.authenticate(
           url: signOutUrl,
           callbackUrlScheme: 'myapp',
           preferEphemeral: true,
-        ).timeout(const Duration(seconds: 5));
+        ).timeout(const Duration(seconds: 30));
+        print('[SignOut] Cognito logout completed successfully');
       } catch (e) {
-        print('[SignOut] Web auth timed out or failed: $e');
-        // This is okay - we've already cleared local data
+        print('[SignOut] Error during Cognito logout: $e');
+        // Continue with local cleanup even if Cognito logout fails
       }
+      
+      // Then clear local data
+      print('[SignOut] Clearing local data');
+      await clearLocalData();
+      
     } catch (e) {
       print('[SignOut] Error during sign out process: $e');
-      // Even if there's an error, we've tried our best to clear data
+      // Ensure local data is cleared even if there's an error
+      await clearLocalData();
     }
   }
 
@@ -304,7 +309,16 @@ class AuthService {
 
   Future<String> getAuthUrl() async {
     final deviceId = await getDeviceId();
-    return '$_cognitoUrl/login?response_type=code&client_id=$_clientId&redirect_uri=$_redirectUri&identity_provider=$_identityProvider&state=$deviceId&prompt=login&max_age=0&autofocus=false';
+    final nonce = const Uuid().v4(); // Add a random nonce to prevent caching
+    return '$_cognitoUrl/login?response_type=code'
+           '&client_id=$_clientId'
+           '&redirect_uri=$_redirectUri'
+           '&identity_provider=$_identityProvider'
+           '&state=$deviceId'
+           '&prompt=login'
+           '&max_age=0'
+           '&nonce=$nonce'
+           '&autofocus=false';
   }
 
   Future<Map<String, dynamic>> exchangeCodeForToken(String code) async {
