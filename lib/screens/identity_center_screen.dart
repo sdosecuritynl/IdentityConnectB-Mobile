@@ -76,7 +76,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                     Text(
                       'Identity Center',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey.shade900,
                         letterSpacing: -0.5,
@@ -86,7 +86,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                     Text(
                       'Verify the identity of your colleagues and vendors in real-time.',
                       style: TextStyle(
-                        fontSize: 17,
+                        fontSize: 15,
                         color: Colors.grey.shade600,
                         height: 1.3,
                       ),
@@ -104,7 +104,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                           Text(
                             'Send Verification Request',
                             style: TextStyle(
-                              fontSize: 22,
+                              fontSize: 18,
                               fontWeight: FontWeight.w600,
                               color: Colors.grey.shade900,
                               letterSpacing: -0.5,
@@ -114,7 +114,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                           Text(
                             'Enter the email address of the person you want to verify.',
                             style: TextStyle(
-                              fontSize: 17,
+                              fontSize: 15,
                               color: Colors.grey.shade600,
                               height: 1.3,
                             ),
@@ -138,7 +138,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                                 hintText: 'Email address',
                                 hintStyle: TextStyle(
                                   color: Colors.grey.shade400,
-                                  fontSize: 17,
+                                  fontSize: 15,
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -153,11 +153,11 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                                 prefixIcon: Icon(
                                   Icons.mail_outline_rounded,
                                   color: AppTheme.primaryBlue,
-                                  size: 22,
+                                  size: 20,
                                 ),
                               ),
                               style: TextStyle(
-                                fontSize: 17,
+                                fontSize: 15,
                                 color: Colors.grey.shade900,
                               ),
                               keyboardType: TextInputType.emailAddress,
@@ -179,7 +179,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                                     Icon(
                                       Icons.error_outline,
                                       color: Colors.red.shade700,
-                                      size: 20,
+                                      size: 18,
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
@@ -187,7 +187,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                                         _error!,
                                         style: TextStyle(
                                           color: Colors.red.shade700,
-                                          fontSize: 15,
+                                          fontSize: 13,
                                         ),
                                       ),
                                     ),
@@ -209,7 +209,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                                     Icon(
                                       Icons.check_circle_outline,
                                       color: Colors.green.shade700,
-                                      size: 20,
+                                      size: 18,
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
@@ -217,7 +217,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                                         _success!,
                                         style: TextStyle(
                                           color: Colors.green.shade700,
-                                          fontSize: 15,
+                                          fontSize: 13,
                                         ),
                                       ),
                                     ),
@@ -251,7 +251,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                                   : Text(
                                       'Send Verification Request',
                                       style: TextStyle(
-                                        fontSize: 17,
+                                        fontSize: 15,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
