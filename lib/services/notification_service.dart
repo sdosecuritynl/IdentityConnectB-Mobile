@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../main.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -38,7 +39,19 @@ class NotificationService {
 
   void _handleNotificationTap(Map<String, dynamic> payload) {
     print('[Flutter] Notification tapped with payload: $payload');
-    // You can implement navigation or other actions based on the payload
+    
+    if (payload.containsKey('sessionID')) {
+      final sessionId = payload['sessionID'] as String;
+      print('[Flutter] Navigating to approval request screen with session ID: $sessionId');
+      
+      // Use the global navigator key to navigate
+      navigatorKey.currentState?.pushNamed(
+        '/approval_request',
+        arguments: {'sessionId': sessionId},
+      );
+    } else {
+      print('[Flutter] No session ID found in notification payload');
+    }
   }
 
   Future<String?> getDeviceToken() async {

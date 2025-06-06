@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
+import 'screens/approval_request_screen.dart';
 import 'theme/app_theme.dart';
+import 'services/notification_service.dart';
+
+// Global navigator key for handling navigation from anywhere
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 // Custom page transition
 class FadePageRoute<T> extends PageRouteBuilder<T> {
@@ -26,6 +31,11 @@ class FadePageRoute<T> extends PageRouteBuilder<T> {
 }
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize notification service
+  NotificationService();
+  
   runApp(const MyApp());
 }
 
@@ -36,6 +46,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'IdentityConnect',
+      navigatorKey: navigatorKey, // Add navigator key
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: AppBarTheme(
@@ -64,6 +75,15 @@ class MyApp extends StatelessWidget {
         ),
       ),
       initialRoute: '/',
+      onGenerateRoute: (settings) {
+        if (settings.name == '/approval_request') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return FadePageRoute(
+            page: ApprovalRequestScreen(sessionId: args['sessionId'] as String),
+          );
+        }
+        return null;
+      },
       routes: {
         '/': (context) => const LoginScreen(),
       },
