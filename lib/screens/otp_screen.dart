@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'dart:async';
@@ -22,6 +23,7 @@ class _OTPScreenState extends State<OTPScreen> {
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
   final _authService = AuthService();
+  final _notificationService = NotificationService();
   bool _isLoading = false;
   bool _otpSent = false;
   String? _error;
@@ -109,21 +111,27 @@ class _OTPScreenState extends State<OTPScreen> {
       );
 
       if (success) {
-        // Register the device after successful OTP verification
-        final registrationResult = await _authService.registerDevice(
-          widget.email,
-          widget.token,
-        );
-
-        if (registrationResult != null && registrationResult['registered'] == true) {
-          if (!mounted) return;
-          // Navigate to home screen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => HomeScreen(email: widget.email)),
+        // Get the device token from the notification service
+        final deviceToken = await _notificationService.getDeviceToken();
+        if (deviceToken != null) {
+          // Register the push notification token
+          final tokenResult = await _authService.registerPushToken(
+            widget.token,
+            deviceToken,
           );
-          return;
+
+          print('[OTP] Push token registration result: ${tokenResult['status']}');
+        } else {
+          print('[OTP] No device token available yet');
         }
+
+        // Continue to home screen regardless of push token registration
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen(email: widget.email)),
+        );
+        return;
       }
 
       if (mounted) {

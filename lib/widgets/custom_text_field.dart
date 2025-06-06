@@ -1,6 +1,7 @@
 // lib/widgets/custom_text_field.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for TextInputFormatter
+import '../theme/app_theme.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -32,22 +33,12 @@ class CustomTextField extends StatelessWidget {
       keyboardType: keyboardType, // Applied keyboardType
       validator: validator, // Applied validator
       inputFormatters: inputFormatters, // Applied inputFormatters
-      decoration: InputDecoration(
+      decoration: AppTheme.textFieldDecoration.copyWith(
         labelText: labelText, // Used labelText
         hintText: hintText, // Used hintText
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null, // Used prefixIcon
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.blueAccent, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Colors.deepPurpleAccent, width: 2.0),
-        ),
-        filled: true,
-        fillColor: Colors.blue.withOpacity(0.05),
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppTheme.primaryBlue) : null, // Used prefixIcon
       ),
+      style: TextStyle(color: AppTheme.textDark),
     );
   }
 }

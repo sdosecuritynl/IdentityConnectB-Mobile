@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/menu_actions.dart';
+import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 
 class IdentityCenterScreen extends StatefulWidget {
@@ -12,12 +13,59 @@ class IdentityCenterScreen extends StatefulWidget {
 
 class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
   final MenuActions _menuActions = MenuActions();
+  final ApiService _apiService = ApiService();
   final _emailController = TextEditingController();
+  bool _isLoading = false;
+  String? _error;
+  String? _success;
 
   @override
   void dispose() {
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleVerify() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() {
+        _error = 'Please enter an email address';
+        _success = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _success = null;
+    });
+
+    try {
+      final success = await _apiService.submitP2PRequest(context, email);
+      
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          if (success) {
+            _success = 'Verification request sent successfully';
+            _error = null;
+            _emailController.clear();
+          } else {
+            _error = 'Failed to send verification request. Please try again.';
+            _success = null;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = 'Error: $e';
+          _success = null;
+        });
+      }
+    }
   }
 
   @override
@@ -165,26 +213,49 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                               style: TextStyle(color: AppTheme.textDark),
                             ),
                           ),
+                          if (_error != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: Text(
+                                _error!,
+                                style: AppTheme.bodyText.copyWith(color: Colors.red),
+                              ),
+                            ),
+                          if (_success != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: Text(
+                                _success!,
+                                style: AppTheme.bodyText.copyWith(color: Colors.green),
+                              ),
+                            ),
                           const SizedBox(height: 24),
                           Container(
                             decoration: AppTheme.buttonDecoration,
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () {
-                                // Handle verify action
-                              },
+                              onPressed: _isLoading ? null : _handleVerify,
                               style: AppTheme.primaryButtonStyle,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.verified_user, size: 24),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Verify Now',
-                                    style: AppTheme.buttonText.copyWith(color: Colors.white),
-                                  ),
-                                ],
-                              ),
+                              child: _isLoading
+                                  ? SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    )
+                                  : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.verified_user, size: 24),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Verify Now',
+                                          style: AppTheme.buttonText.copyWith(color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
                             ),
                           ),
                         ],

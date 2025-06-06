@@ -525,4 +525,48 @@ class AuthService {
       return false;
     }
   }
+
+  Future<Map<String, dynamic>> registerPushToken(String token, String deviceToken) async {
+    try {
+      print('[Auth] Registering push notification token');
+      
+      final body = {
+        'deviceToken': deviceToken,
+        'platform': Platform.isIOS ? 'ios' : 'android',
+        'tokenType': Platform.isIOS ? 'apns' : 'fcm'
+      };
+
+      print('[Auth] Registering push token with body: $body');
+      final response = await http.post(
+        Uri.parse('$_baseUrl/registerDeviceToken'),
+        headers: _getAuthHeaders(token),
+        body: jsonEncode(body),
+      );
+
+      print('[Auth] Push token registration response status: ${response.statusCode}');
+      print('[Auth] Push token registration response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'status': 'success',
+          'registered': true,
+          'data': data
+        };
+      }
+
+      return {
+        'status': 'error',
+        'registered': false,
+        'error': 'Failed to register push token'
+      };
+    } catch (e) {
+      print('[Auth] Error registering push token: $e');
+      return {
+        'status': 'error',
+        'registered': false,
+        'error': e.toString()
+      };
+    }
+  }
 }
