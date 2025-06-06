@@ -179,4 +179,24 @@ class ApiService {
       return false;
     }
   }
+
+  Future<void> verifyIdentity(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/verify'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'email': email,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to send verification request');
+      }
+    } catch (e) {
+      throw Exception('Network error: $e');
+    }
+  }
 } 

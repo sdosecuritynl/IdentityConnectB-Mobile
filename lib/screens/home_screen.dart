@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import '../services/menu_actions.dart';
 import '../widgets/app_header.dart';
 import 'identity_center_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String email;
-  final MenuActions _menuActions = MenuActions();
 
   // Define brand colors
   static const Color primaryBlue = Color(0xFF0066CC);  // Main blue from logo
@@ -13,72 +11,23 @@ class HomeScreen extends StatelessWidget {
   static const Color textDark = Color(0xFF1A1F36);     // Dark text color
   static const Color textGrey = Color(0xFF6B7280);     // Secondary text color
 
-  HomeScreen({super.key, required this.email});
+  const HomeScreen({super.key, required this.email});
+
+  void _goToIdentityCenter(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => IdentityCenterScreen(email: email)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      drawer: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.85,
-        child: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Logged in as',
-                      style: TextStyle(
-                        color: textGrey,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      email,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: textDark,
-                      ),
-                      softWrap: true,
-                      overflow: TextOverflow.visible,
-                    ),
-                  ],
-                ),
-              ),
-              Divider(thickness: 1, color: textGrey.withOpacity(0.2)),
-              ListTile(
-                leading: Icon(Icons.home, color: primaryBlue),
-                title: Text('Home', style: TextStyle(color: textDark)),
-                onTap: () => Navigator.pop(context),
-              ),
-              ListTile(
-                leading: Icon(Icons.security, color: primaryBlue),
-                title: Text('Identity Center', style: TextStyle(color: textDark)),
-                onTap: () => _menuActions.goToIdentityCenter(context, email),
-              ),
-              ListTile(
-                leading: Icon(Icons.logout, color: primaryBlue),
-                title: Text('Sign Out', style: TextStyle(color: textDark)),
-                onTap: () => _menuActions.signOut(context),
-              ),
-            ],
-          ),
-        ),
-      ),
-      endDrawer: null,
-      drawerScrimColor: Colors.black54,
       body: SafeArea(
         child: Column(
           children: [
             const AppHeader(),
-            // Content
             Expanded(
               child: Stack(
                 fit: StackFit.expand,
@@ -130,7 +79,7 @@ class HomeScreen extends StatelessWidget {
                         ],
                       ),
                       child: ElevatedButton(
-                        onPressed: () => _menuActions.goToIdentityCenter(context, email),
+                        onPressed: () => _goToIdentityCenter(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryBlue,
                           foregroundColor: Colors.white,
