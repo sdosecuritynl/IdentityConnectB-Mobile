@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/menu_actions.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_header.dart';
 
 class IdentityCenterScreen extends StatefulWidget {
   final String email;
@@ -125,41 +126,12 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
           ),
         ),
       ),
+      endDrawer: null,
+      drawerScrimColor: Colors.black54,
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: AppTheme.headerShadow,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Image.asset(
-                        'assets/logo.png',
-                        height: 40,
-                        width: 40,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'IdentityConnect.io',
-                        style: AppTheme.titleLarge,
-                      ),
-                    ],
-                  ),
-                  Builder(
-                    builder: (context) => IconButton(
-                      icon: Icon(Icons.menu, size: 28, color: AppTheme.primaryBlue),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const AppHeader(),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),

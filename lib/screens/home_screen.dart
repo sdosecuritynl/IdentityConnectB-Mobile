@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/menu_actions.dart';
+import '../widgets/app_header.dart';
 import 'identity_center_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -71,53 +72,12 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
+      endDrawer: null,
+      drawerScrimColor: Colors.black54,
       body: SafeArea(
         child: Column(
           children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: textGrey.withOpacity(0.1),
-                    offset: const Offset(0, 2),
-                    blurRadius: 4,
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Image.asset(
-                        'assets/logo.png',
-                        height: 40,
-                        width: 40,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'IdentityConnect.io',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          color: primaryBlue,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Builder(
-                    builder: (context) => IconButton(
-                      icon: Icon(Icons.menu, size: 28, color: primaryBlue),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const AppHeader(),
             // Content
             Expanded(
               child: Stack(

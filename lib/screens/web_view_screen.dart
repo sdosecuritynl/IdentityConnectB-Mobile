@@ -65,9 +65,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
             Align(
               alignment: Alignment.topRight,
               child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: AppTheme.headerShadow,
+                decoration: const BoxDecoration(
+                  color: Colors.transparent,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
