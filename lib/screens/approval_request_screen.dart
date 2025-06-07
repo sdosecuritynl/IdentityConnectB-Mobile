@@ -154,100 +154,185 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.accentBlue.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppTheme.primaryBlue.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryBlue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.verified_user,
-                  color: AppTheme.primaryBlue,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  'Identity Verification Request',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textDark,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ),
-            ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Request Card
+        Card(
+          elevation: 0,
+          color: Colors.blue.shade50,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(height: 24),
-          if (_requestData != null) ...[
-            _buildInfoRow('From:', _requestData!.from),
-            const SizedBox(height: 12),
-            _buildInfoRow('To:', _requestData!.to),
-            const SizedBox(height: 12),
-            _buildInfoRow('Timestamp:', _requestData!.getFormattedTimestamp()),
-            const SizedBox(height: 24),
-            Text(
-              'Identity approval request from ${_requestData!.getDomainFromEmail()}',
-              style: TextStyle(
-                fontSize: 15,
-                color: AppTheme.textDark,
-                height: 1.5,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Checkbox(
-                    value: _isRecognized,
-                    onChanged: (value) {
-                      setState(() {
-                        _isRecognized = value ?? false;
-                      });
-                    },
-                    activeColor: AppTheme.primaryBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+                Row(
+                  children: [
+                    Icon(Icons.verified_user, color: AppTheme.primaryBlue),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Identity Verification Request',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: AppTheme.primaryBlue,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildInfoRow('From:', _requestData!.from),
+                const SizedBox(height: 8),
+                _buildInfoRow('To:', _requestData!.to),
+                const SizedBox(height: 8),
+                _buildInfoRow('Timestamp:', _requestData!.getFormattedTimestamp()),
+                const SizedBox(height: 8),
+                _buildInfoRow('Message:', _requestData!.getDomainFromEmail()),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        
+        // Fraud Awareness Box
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Fraud Awareness',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.orange.shade900,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Before approving this request:',
+                style: TextStyle(
+                  color: Colors.orange.shade900,
+                  fontWeight: FontWeight.w500,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'I recognize this identity verification request.',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: AppTheme.textDark,
-                      height: 1.5,
-                      letterSpacing: -0.3,
-                    ),
+              ),
+              const SizedBox(height: 8),
+              _buildBulletPoint('Verify you recognize the sender\'s email'),
+              _buildBulletPoint('Confirm this request was expected'),
+              _buildBulletPoint('If unsure, contact the sender through a different channel'),
+              if (!_isRecognized) ...[
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: _isProcessing ? null : () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.orange.shade700,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Report Suspicious Request'),
+                          ],
+                        ),
+                        content: const Text(
+                          'This will notify your security team about this suspicious verification request. Would you like to proceed?'
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              // TODO: Implement report to security team
+                              Navigator.pop(context);
+                              Navigator.pop(context); // Return to previous screen
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Request reported to security team'),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Report'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.red.shade700,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Report as Suspicious',
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        
+        // Recognition Checkbox
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: CheckboxListTile(
+            value: _isRecognized,
+            onChanged: (value) {
+              setState(() {
+                _isRecognized = value ?? false;
+              });
+            },
+            title: Text(
+              'I recognize this identity verification request.',
+              style: TextStyle(
+                color: AppTheme.textDark,
+              ),
             ),
-          ],
-        ],
-      ),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
     );
   }
 
@@ -282,90 +367,93 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
     );
   }
 
+  Widget _buildBulletPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '•',
+            style: TextStyle(
+              color: Colors.orange.shade900,
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: Colors.orange.shade900,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          const AppHeader(showBackButton: true),
-          Expanded(
-            child: Stack(
-              children: [
-                if (_isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildRequestDetails(),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(30),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppTheme.primaryBlue.withOpacity(0.3),
-                                      spreadRadius: 0,
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: ElevatedButton(
-                                  onPressed: _isProcessing ? null : () => _handleApproval(true),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.primaryBlue,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const AppHeader(showBackButton: true),
+            if (_isLoading)
+              const Expanded(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else
+              Expanded(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24.0),
+                        child: _buildRequestDetails(),
+                      ),
+                    ),
+                    // Bottom Action Buttons - Always visible
+                    Container(
+                      padding: EdgeInsets.fromLTRB(24, 16, 24, 16 + MediaQuery.of(context).padding.bottom),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            offset: const Offset(0, -1),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.primaryBlue.withOpacity(0.3),
+                                    spreadRadius: 0,
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      if (_isProcessing)
-                                        const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                          ),
-                                        )
-                                      else
-                                        const Icon(Icons.check_circle, size: 24),
-                                      const SizedBox(width: 12),
-                                      const Text(
-                                        'Approve',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: _isProcessing ? null : () => _handleApproval(false),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.red,
-                                  side: BorderSide(
-                                    color: _isProcessing ? Colors.grey : Colors.red,
-                                  ),
+                              child: ElevatedButton(
+                                onPressed: (_isProcessing || !_isRecognized) ? null : () => _handleApproval(true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryBlue,
+                                  foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(vertical: 16),
+                                  elevation: 0,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30),
                                   ),
@@ -379,14 +467,14 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
                                         height: 20,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                         ),
                                       )
                                     else
-                                      const Icon(Icons.cancel, size: 24),
+                                      const Icon(Icons.check_circle, size: 24),
                                     const SizedBox(width: 12),
                                     const Text(
-                                      'Reject',
+                                      'Approve',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
@@ -397,15 +485,85 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: (_isProcessing || !_isRecognized) ? null : () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Reject Request'),
+                                    content: const Text(
+                                      'Are you sure you want to reject this verification request?\n\n'
+                                      'Use this option if you recognize the sender but want to deny their request. '
+                                      'If you don\'t recognize this request, uncheck the recognition box and use "Report as Suspicious" instead.'
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          _handleApproval(false);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        child: const Text('Reject'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: BorderSide(
+                                  color: (_isProcessing || !_isRecognized) ? Colors.grey : Colors.red,
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (_isProcessing)
+                                    const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                                      ),
+                                    )
+                                  else
+                                    const Icon(Icons.cancel, size: 24),
+                                  const SizedBox(width: 12),
+                                  const Text(
+                                    'Reject',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-              ],
-            ),
-          ),
-        ],
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

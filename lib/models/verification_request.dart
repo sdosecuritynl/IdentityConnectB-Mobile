@@ -55,9 +55,10 @@ class VerificationRequest {
 
   String getDomainFromEmail() {
     try {
-      return from.split('@')[1];
+      final domain = from.split('@')[1];
+      return 'New approval request from $domain';
     } catch (e) {
-      return domain;
+      return 'New approval request from $domain';
     }
   }
 } 
