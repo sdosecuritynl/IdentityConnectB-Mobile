@@ -35,7 +35,7 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
     });
 
     try {
-      await _apiService.verifyIdentity(_emailController.text);
+      await _apiService.verifyIdentity(context, _emailController.text);
       setState(() {
         _success = 'Verification request sent successfully';
         _error = null;

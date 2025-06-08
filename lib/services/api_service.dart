@@ -180,23 +180,32 @@ class ApiService {
     }
   }
 
-  Future<void> verifyIdentity(String email) async {
+  Future<void> verifyIdentity(BuildContext context, String email) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/verify'),
-        headers: {
-          'Content-Type': 'application/json',
+      final response = await authenticatedRequest(
+        context,
+        'submitRequest',
+        method: 'POST',
+        body: {
+          'to': email,
+          'challengeNonce': _generateNonce(),
         },
-        body: json.encode({
-          'email': email,
-        }),
       );
 
+      print('[ApiService] Verify identity response status: ${response.statusCode}');
+      print('[ApiService] Verify identity response body: ${response.body}');
+
       if (response.statusCode != 200) {
-        throw Exception('Failed to send verification request');
+        final errorBody = response.body;
+        print('[ApiService] Verify identity failed with status ${response.statusCode} and body: $errorBody');
+        throw Exception('Failed to send verification request: ${response.statusCode} - $errorBody');
       }
     } catch (e) {
-      throw Exception('Network error: $e');
+      print('[ApiService] Error sending verification request: $e');
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Network error while sending verification request: $e');
     }
   }
 } 
