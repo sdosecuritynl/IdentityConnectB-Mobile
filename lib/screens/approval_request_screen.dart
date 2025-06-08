@@ -74,23 +74,59 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
 
     setState(() {
       _isProcessing = true;
+      _error = null;
     });
 
     try {
-      // TODO: Implement approval/rejection logic
-      print('[Approval] Session ${widget.sessionId} - Approved: $approved');
+      final success = await _verificationService.submitResponse(widget.sessionId, approved);
       
       if (mounted) {
-        Navigator.of(context).pop(); // Return to previous screen
+        if (success) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(approved ? 'Request approved successfully' : 'Request rejected'),
+              backgroundColor: approved ? Colors.green : Colors.orange,
+            ),
+          );
+          Navigator.of(context).pop(); // Return to previous screen
+        } else {
+          setState(() {
+            _error = 'Failed to process the request. Please try again.';
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to process the request. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _error = e.toString();
+        });
+        
+        // Handle authentication errors
+        if (e.toString().contains('Authentication failed')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Session expired. Please log in again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          Future.delayed(const Duration(seconds: 2), () {
+            Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) {

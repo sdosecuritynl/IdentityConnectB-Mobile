@@ -57,4 +57,44 @@ class VerificationService {
       throw Exception('Failed to fetch request data: $e');
     }
   }
+
+  Future<bool> submitResponse(String sessionId, bool approved) async {
+    try {
+      print('[Verification] Submitting response for session: $sessionId (approved: $approved)');
+      
+      final authToken = await _getAuthToken();
+      if (authToken == null) {
+        throw Exception('No authentication token available');
+      }
+
+      final response = await http.post(
+        Uri.parse('$_baseUrl/submitResponse'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+        body: jsonEncode({
+          'sessionId': sessionId,
+          'decision': approved ? 'approved' : 'rejected',
+        }),
+      );
+
+      print('[Verification] Submit response status: ${response.statusCode}');
+      print('[Verification] Submit response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['success'] == true;
+      }
+
+      if (response.statusCode == 401) {
+        throw Exception('Authentication failed. Please log in again.');
+      }
+
+      throw Exception('Failed to submit response: ${response.statusCode}');
+    } catch (e) {
+      print('[Verification] Error submitting response: $e');
+      throw Exception('Failed to submit response: $e');
+    }
+  }
 } 
