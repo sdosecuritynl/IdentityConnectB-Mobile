@@ -4,22 +4,20 @@ import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
-  private let backendURL = "https://d3oyxmwcqyuai5.cloudfront.net" // Your AWS API Gateway URL
+  private let backendURL = "https://d3oyxmwcqyuai5.cloudfront.net"
   private var flutterMethodChannel: FlutterMethodChannel?
-  
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     print("[Push Setup] Initializing push notification setup...")
-    
-    // Set up Flutter method channel for communication
+
     let controller = window?.rootViewController as! FlutterViewController
     flutterMethodChannel = FlutterMethodChannel(
       name: "com.identityconnect.business/notifications",
       binaryMessenger: controller.binaryMessenger)
-    
-    // Set up method channel handler
+
     flutterMethodChannel?.setMethodCallHandler({ [weak self] (call, result) in
       switch call.method {
       case "registerStoredToken":
@@ -35,23 +33,16 @@ import UserNotifications
         result(FlutterMethodNotImplemented)
       }
     })
-    
-    print("[Push Setup] Flutter method channel initialized")
-    
-    // Request permission for push notifications
+
     UNUserNotificationCenter.current().delegate = self
     UNUserNotificationCenter.current().requestAuthorization(
       options: [.alert, .sound, .badge],
       completionHandler: { granted, error in
-        print("[Push Setup] Notification permission request result - Granted: \(granted)")
+        print("[Push Setup] Notification permission granted: \(granted)")
         if let error = error {
-          print("[Push Setup] ❌ Error requesting permissions: \(error.localizedDescription)")
-          return
+          print("[Push Setup] ❌ Permission error: \(error.localizedDescription)")
         }
-        
-        // Register for remote notifications on the main thread
         DispatchQueue.main.async {
-          print("[Push Setup] Registering for remote notifications...")
           UIApplication.shared.registerForRemoteNotifications()
         }
     })
@@ -60,130 +51,138 @@ import UserNotifications
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-  // Handle successful registration with APNs
   override func application(
     _ application: UIApplication,
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
-    let tokenParts = deviceToken.map { data in String(format: "%02.2hhx", data) }
+    let tokenParts = deviceToken.map { String(format: "%02.2hhx", $0) }
     let token = tokenParts.joined()
-    print("[Push Setup] ✅ Successfully received APNs device token")
-    print("[Push Setup] Token: \(token)")
-    
-    // Send token to Flutter to store in secure storage
+    print("[Push Setup] ✅ APNs token: \(token)")
     flutterMethodChannel?.invokeMethod("storeDeviceToken", arguments: token)
-    print("[Push Setup] Token sent to Flutter for storage")
-    print("[Push Setup] NOTE: Token will be registered with backend after user authentication")
   }
 
-  // Handle registration errors
   override func application(
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
-    print("[Push Setup] ❌ Failed to register for remote notifications")
-    print("[Push Setup] Error: \(error.localizedDescription)")
+    print("[Push Setup] ❌ Failed to register for remote notifications: \(error.localizedDescription)")
   }
 
-  // Handle receiving remote notification when app is in foreground
   override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
     let userInfo = notification.request.content.userInfo
-    print("[Push Received] 📱 Received notification while app in foreground")
-    print("[Push Received] Payload: \(userInfo)")
-    
+    print("[Push Received] 📱 Foreground notification: \(userInfo)")
+
+    if let aps = userInfo["aps"] as? [String: Any],
+       let alert = aps["alert"] as? [String: Any],
+       let title = alert["title"] as? String,
+       let body = alert["body"] as? String {
+      print("[Push Received] Title: \(title)")
+      print("[Push Received] Body: \(body)")
+    }
+
     if #available(iOS 14.0, *) {
-      completionHandler([[.banner, .sound]])
+      completionHandler([.banner, .sound])
     } else {
-      completionHandler([[.alert, .sound]])
+      completionHandler([.alert, .sound])
     }
   }
 
-  // Handle user tapping on notification
   override func userNotificationCenter(
     _ center: UNUserNotificationCenter,
     didReceive response: UNNotificationResponse,
     withCompletionHandler completionHandler: @escaping () -> Void
   ) {
     let userInfo = response.notification.request.content.userInfo
-    print("[Push Tapped] 👆 User tapped notification")
-    print("[Push Tapped] Payload: \(userInfo)")
-    
-    // Pass notification data to Flutter
-    if let jsonData = try? JSONSerialization.data(withJSONObject: userInfo),
+    print("[Push Tapped] 👆 Notification tapped")
+    print("[Push Tapped] Full userInfo: \(userInfo)")
+
+    var payload: [String: Any] = [:]
+
+    if let aps = userInfo["aps"] as? [String: Any],
+       let alert = aps["alert"] as? [String: Any],
+       let title = alert["title"] as? String,
+       let body = alert["body"] as? String {
+      payload["notification"] = [
+        "title": title,
+        "body": body
+      ]
+    }
+
+    // Try sessionID from top-level
+    if let sessionID = userInfo["sessionID"] as? String {
+      payload["sessionID"] = sessionID
+    } else if let apnsString = userInfo["APNS"] as? String,
+              let apnsData = apnsString.data(using: .utf8),
+              let apnsJson = try? JSONSerialization.jsonObject(with: apnsData) as? [String: Any],
+              let sessionID = apnsJson["sessionID"] as? String {
+      payload["sessionID"] = sessionID
+    }
+
+    if let jsonData = try? JSONSerialization.data(withJSONObject: payload),
        let jsonString = String(data: jsonData, encoding: .utf8) {
-      print("[Push Tapped] Forwarding payload to Flutter")
+      print("[Push Tapped] Forwarding to Flutter: \(jsonString)")
       flutterMethodChannel?.invokeMethod("handleNotificationTap", arguments: jsonString)
     }
-    
+
     completionHandler()
   }
-  
-  // Send token to backend
+
   private func sendTokenToBackend(token: String) {
-    print("[Backend Registration] Starting device token registration process")
-    
+    print("[Backend Registration] Registering device token to backend...")
+
     guard let url = URL(string: "\(backendURL)/registerDeviceToken") else {
       print("[Backend Registration] ❌ Invalid backend URL")
       return
     }
-    
+
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    
-    print("[Backend Registration] Getting auth token from Flutter...")
-    // Get the stored auth token from Flutter
+
     flutterMethodChannel?.invokeMethod("getAuthToken", arguments: nil, result: { result in
       guard let authToken = result as? String else {
-        print("[Backend Registration] ❌ No auth token available")
+        print("[Backend Registration] ❌ Missing auth token")
         return
       }
-      
-      print("[Backend Registration] Auth token retrieved successfully")
+
       request.setValue("Bearer \(authToken)", forHTTPHeaderField: "Authorization")
-      
       let body: [String: Any] = [
         "deviceToken": token,
         "platform": "ios",
         "tokenType": "apns"
       ]
-      
+
       do {
         let jsonData = try JSONSerialization.data(withJSONObject: body)
         request.httpBody = jsonData
-        print("[Backend Registration] Request body prepared:")
-        if let jsonString = String(data: jsonData, encoding: .utf8) {
-          print(jsonString)
-        }
       } catch {
-        print("[Backend Registration] ❌ Error encoding token data: \(error)")
+        print("[Backend Registration] ❌ JSON encoding failed: \(error)")
         return
       }
-      
-      print("[Backend Registration] Sending request to backend...")
+
       let task = URLSession.shared.dataTask(with: request) { data, response, error in
         if let error = error {
           print("[Backend Registration] ❌ Network error: \(error)")
           return
         }
-        
+
         if let httpResponse = response as? HTTPURLResponse {
-          print("[Backend Registration] Response status code: \(httpResponse.statusCode)")
-          
+          print("[Backend Registration] Response code: \(httpResponse.statusCode)")
           if httpResponse.statusCode == 200 {
-            print("[Backend Registration] ✅ Device token successfully registered")
+            print("[Backend Registration] ✅ Token registered")
           } else {
-            print("[Backend Registration] ❌ Registration failed")
-            if let data = data, let responseString = String(data: data, encoding: .utf8) {
-              print("[Backend Registration] Error response: \(responseString)")
+            print("[Backend Registration] ❌ Backend error")
+            if let data = data, let resp = String(data: data, encoding: .utf8) {
+              print("[Backend Registration] Response: \(resp)")
             }
           }
         }
       }
+
       task.resume()
     })
   }
