@@ -122,10 +122,17 @@ import UserNotifications
       payload["sessionID"] = sessionID
     }
 
+    // Add navigation flag
+    payload["shouldNavigateHome"] = true
+
     if let jsonData = try? JSONSerialization.data(withJSONObject: payload),
        let jsonString = String(data: jsonData, encoding: .utf8) {
       print("[Push Tapped] Forwarding to Flutter: \(jsonString)")
-      flutterMethodChannel?.invokeMethod("handleNotificationTap", arguments: jsonString)
+      
+      // Ensure UI updates happen on main thread
+      DispatchQueue.main.async {
+        self.flutterMethodChannel?.invokeMethod("handleNotificationTap", arguments: jsonString)
+      }
     }
 
     completionHandler()
@@ -185,5 +192,22 @@ import UserNotifications
 
       task.resume()
     })
+  }
+
+  // Add method to handle verification response
+  private func handleVerificationResponse(sessionID: String, approved: Bool) {
+    let payload: [String: Any] = [
+      "sessionID": sessionID,
+      "approved": approved,
+      "shouldNavigateHome": true
+    ]
+    
+    if let jsonData = try? JSONSerialization.data(withJSONObject: payload),
+       let jsonString = String(data: jsonData, encoding: .utf8) {
+      print("[Verification] Forwarding response to Flutter")
+      DispatchQueue.main.async {
+        self.flutterMethodChannel?.invokeMethod("handleVerificationResponse", arguments: jsonString)
+      }
+    }
   }
 }

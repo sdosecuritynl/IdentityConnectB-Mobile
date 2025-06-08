@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_header.dart';
 import '../models/verification_request.dart';
 import '../services/verification_service.dart';
+import '../services/storage_service.dart';
+import 'home_screen.dart';
 
 class ApprovalRequestScreen extends StatefulWidget {
   final String sessionId;
@@ -23,6 +26,7 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
   String? _error;
   VerificationRequest? _requestData;
   final _verificationService = VerificationService();
+  final _storage = SecureStorageService();
 
   @override
   void initState() {
@@ -62,7 +66,10 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
   }
 
   Future<void> _handleApproval(bool approved) async {
+    print('[ApprovalRequest] Starting approval process. Approved: $approved');
+    
     if (!_isRecognized) {
+      print('[ApprovalRequest] Request not recognized, showing error');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please confirm that you recognize this request.'),
@@ -72,67 +79,91 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
       return;
     }
 
+    print('[ApprovalRequest] Storing navigator and scaffold messenger states');
+    // Store navigator and scaffold messenger states before any async operations
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    print('[ApprovalRequest] Setting processing state');
     setState(() {
       _isProcessing = true;
       _error = null;
     });
 
     try {
+      print('[ApprovalRequest] Submitting response to server');
       final success = await _verificationService.submitResponse(widget.sessionId, approved);
+      print('[ApprovalRequest] Server response success: $success');
       
-      if (mounted) {
-        if (success) {
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(approved ? 'Request approved successfully' : 'Request rejected'),
-              backgroundColor: approved ? Colors.green : Colors.orange,
-            ),
+      if (success) {
+        print('[ApprovalRequest] Showing success message');
+        // Show success message using stored scaffold messenger
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(approved ? 'Request approved successfully' : 'Request rejected'),
+            backgroundColor: approved ? Colors.green : Colors.orange,
+          ),
+        );
+
+        print('[ApprovalRequest] Getting auth token for navigation');
+        // Get the authenticated user's email from the token
+        final token = await _storage.getToken();
+        if (token != null) {
+          print('[ApprovalRequest] Token found, decoding user email');
+          final decoded = JwtDecoder.decode(token);
+          final userEmail = decoded['email'] ?? decoded['sub'];
+          
+          print('[ApprovalRequest] Navigating to home screen with email: $userEmail');
+          // Navigate to home screen using stored navigator
+          navigator.pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => HomeScreen(email: userEmail)),
+            (route) => false,
           );
-          Navigator.of(context).pop(); // Return to previous screen
+          print('[ApprovalRequest] Navigation completed');
         } else {
-          setState(() {
-            _error = 'Failed to process the request. Please try again.';
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to process the request. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          print('[ApprovalRequest] No token found, navigating to login screen');
+          // If token is not found, navigate to login screen
+          navigator.pushNamedAndRemoveUntil('/', (route) => false);
         }
-      }
-    } catch (e) {
-      if (mounted) {
+        return; // Exit the function here to prevent further state updates
+      } else {
+        print('[ApprovalRequest] Request failed, showing error');
         setState(() {
-          _error = e.toString();
-        });
-        
-        // Handle authentication errors
-        if (e.toString().contains('Authentication failed')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Session expired. Please log in again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          Future.delayed(const Duration(seconds: 2), () {
-            Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
+          _error = 'Failed to process the request. Please try again.';
           _isProcessing = false;
         });
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Failed to process the request. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('[ApprovalRequest] Error during approval process: $e');
+      setState(() {
+        _error = e.toString();
+        _isProcessing = false;
+      });
+      
+      // Handle authentication errors
+      if (e.toString().contains('Authentication failed')) {
+        print('[ApprovalRequest] Authentication error, navigating to login');
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Session expired. Please log in again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        navigator.pushNamedAndRemoveUntil('/', (route) => false);
+      } else {
+        print('[ApprovalRequest] General error, showing error message');
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -528,7 +559,7 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
                               onPressed: (_isProcessing || !_isRecognized) ? null : () {
                                 showDialog(
                                   context: context,
-                                  builder: (context) => AlertDialog(
+                                  builder: (dialogContext) => AlertDialog(
                                     title: const Text('Reject Request'),
                                     content: const Text(
                                       'Are you sure you want to reject this verification request?\n\n'
@@ -537,12 +568,15 @@ class _ApprovalRequestScreenState extends State<ApprovalRequestScreen> {
                                     ),
                                     actions: [
                                       TextButton(
-                                        onPressed: () => Navigator.pop(context),
+                                        onPressed: () => Navigator.pop(dialogContext),
                                         child: const Text('Cancel'),
                                       ),
                                       ElevatedButton(
                                         onPressed: () {
-                                          Navigator.pop(context);
+                                          // Store navigator and scaffold messenger states before closing dialog
+                                          final navigator = Navigator.of(context);
+                                          final scaffoldMessenger = ScaffoldMessenger.of(context);
+                                          Navigator.pop(dialogContext);
                                           _handleApproval(false);
                                         },
                                         style: ElevatedButton.styleFrom(

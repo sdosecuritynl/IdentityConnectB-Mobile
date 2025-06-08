@@ -75,7 +75,7 @@ class VerificationService {
         },
         body: jsonEncode({
           'sessionId': sessionId,
-          'decision': approved ? 'approved' : 'rejected',
+          'decision': approved ? 'approved' : 'denied',
         }),
       );
 
@@ -84,7 +84,7 @@ class VerificationService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['success'] == true;
+        return data['message'] != null;
       }
 
       if (response.statusCode == 401) {
