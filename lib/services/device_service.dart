@@ -232,8 +232,6 @@ class DeviceService {
 
   Future<Map<String, String>> checkDeviceSecurity() async {
     try {
-      return {'status': 'secure'}; //DEBUG -> REMOVE IN PRODUCTION
-
       final deviceInfo = DeviceInfoPlugin();
       bool isSimulator = false;
 
