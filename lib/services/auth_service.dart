@@ -397,20 +397,26 @@ class AuthService {
 
       final result = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && result['verified'] == true) {
-        return {
-          'status': 'verified',
-          'verified': true
-        };
+      if (response.statusCode == 200) {
+        if (result['verified'] == true) {
+          print('[Auth] UUID verification successful');
+          return {
+            'status': 'verified',
+            'verified': true
+          };
+        }
       }
       
+      // Handle specific error cases
       if (result['error'] == 'No device registration found for user') {
+        print('[Auth] No device registration found');
         return {
           'status': 'not_registered',
           'verified': false,
           'error': result['error']
         };
       } else if (result['error'] == 'UUID4 mismatch') {
+        print('[Auth] UUID mismatch detected');
         return {
           'status': 'mismatch',
           'verified': false,
@@ -418,6 +424,7 @@ class AuthService {
         };
       }
 
+      print('[Auth] Unhandled verification error: ${result['error']}');
       return {
         'status': 'error',
         'verified': false,

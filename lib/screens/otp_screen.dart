@@ -111,22 +111,41 @@ class _OTPScreenState extends State<OTPScreen> {
       );
 
       if (success) {
-        // Get the device token from the notification service
+        print('[OTP] OTP verification successful, registering device');
+        
+        // First register the device
+        final deviceRegistration = await _authService.registerDevice(
+          widget.email,
+          widget.token,
+        );
+
+        if (deviceRegistration == null || deviceRegistration['registered'] != true) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+              _error = 'Device registration failed. Please try again.';
+            });
+          }
+          return;
+        }
+
+        print('[OTP] Device registration successful, registering push token');
+        
+        // Then register push notification token if available
         final deviceToken = await _notificationService.getDeviceToken();
         if (deviceToken != null) {
-          // Register the push notification token
           final tokenResult = await _authService.registerPushToken(
             widget.token,
             deviceToken,
           );
-
           print('[OTP] Push token registration result: ${tokenResult['status']}');
         } else {
           print('[OTP] No device token available yet');
         }
 
-        // Continue to home screen regardless of push token registration
+        // Continue to home screen
         if (!mounted) return;
+        print('[OTP] Navigation to home screen');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => HomeScreen(email: widget.email)),
@@ -141,6 +160,7 @@ class _OTPScreenState extends State<OTPScreen> {
         });
       }
     } catch (e) {
+      print('[OTP] Error during verification process: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;

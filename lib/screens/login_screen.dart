@@ -46,8 +46,20 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
             MaterialPageRoute(builder: (_) => HomeScreen(email: email)),
           );
+        } else if (uuidResult['status'] == 'not_registered' || uuidResult['status'] == 'mismatch') {
+          print('[Login] Device not registered or UUID mismatch, starting OTP flow');
+          if (!mounted) return;
+          await Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OTPScreen(
+                email: email,
+                token: token,
+              ),
+            ),
+          );
         } else {
-          print('[Login] Device not registered or UUID mismatch, clearing token');
+          print('[Login] UUID verification failed, clearing token');
           await _storage.clearToken();
           await _storage.clearUUID();
         }
@@ -56,9 +68,15 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       print('[Login] Error checking existing token: $e');
-      // Clear token if there was an error
-      await _storage.clearToken();
-      await _storage.clearUUID();
+      // Only clear tokens on specific authentication errors
+      if (e.toString().toLowerCase().contains('unauthorized') ||
+          e.toString().toLowerCase().contains('forbidden') ||
+          e.toString().contains('401') ||
+          e.toString().contains('403')) {
+        print('[Login] Authentication error detected, clearing tokens');
+        await _storage.clearToken();
+        await _storage.clearUUID();
+      }
     }
   }
 
