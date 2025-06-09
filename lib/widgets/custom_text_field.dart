@@ -12,6 +12,8 @@ class CustomTextField extends StatelessWidget {
   final IconData? prefixIcon; // Added prefixIcon
   final String? Function(String?)? validator; // Added validator
   final List<TextInputFormatter>? inputFormatters; // Added inputFormatters
+  final bool forceLowercase;
+  final bool enabled;
 
   const CustomTextField({
     super.key,
@@ -23,6 +25,8 @@ class CustomTextField extends StatelessWidget {
     this.prefixIcon,
     this.validator,
     this.inputFormatters,
+    this.forceLowercase = false,
+    this.enabled = true,
   });
 
   @override
@@ -31,8 +35,18 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType, // Applied keyboardType
+      enabled: enabled,
       validator: validator, // Applied validator
-      inputFormatters: inputFormatters, // Applied inputFormatters
+      inputFormatters: [
+        if (forceLowercase)
+          TextInputFormatter.withFunction((oldValue, newValue) {
+            return TextEditingValue(
+              text: newValue.text.toLowerCase(),
+              selection: newValue.selection,
+            );
+          }),
+        if (inputFormatters != null) ...inputFormatters!,
+      ],
       decoration: AppTheme.textFieldDecoration.copyWith(
         labelText: labelText, // Used labelText
         hintText: hintText, // Used hintText

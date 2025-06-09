@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_header.dart';
+import '../widgets/custom_text_field.dart';
 
 class IdentityCenterScreen extends StatefulWidget {
   final String email;
@@ -132,37 +133,18 @@ class _IdentityCenterScreenState extends State<IdentityCenterScreen> {
                                 ),
                               ],
                             ),
-                            child: TextField(
+                            child: CustomTextField(
                               controller: _emailController,
-                              decoration: InputDecoration(
-                                hintText: 'Email address',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey.shade400,
-                                  fontSize: 15,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.mail_outline_rounded,
-                                  color: AppTheme.primaryBlue,
-                                  size: 20,
-                                ),
-                              ),
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Colors.grey.shade900,
-                              ),
+                              labelText: 'Email address',
                               keyboardType: TextInputType.emailAddress,
-                              textInputAction: TextInputAction.done,
-                              onSubmitted: (_) => _handleVerify(),
+                              prefixIcon: Icons.mail_outline_rounded,
+                              forceLowercase: true,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter an email address';
+                                }
+                                return null;
+                              },
                             ),
                           ),
                           if (_error != null)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/custom_text_field.dart';
 import 'home_screen.dart';
 import 'dart:async';
 
@@ -202,16 +203,10 @@ class _OTPScreenState extends State<OTPScreen> {
                   selectionHandleColor: AppTheme.primaryBlue,
                 ),
               ),
-              child: TextField(
+              child: CustomTextField(
                 controller: _phoneController,
-                decoration: AppTheme.textFieldDecoration.copyWith(
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone, color: AppTheme.primaryBlue),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppTheme.primaryBlue),
-                  ),
-                ),
+                labelText: 'Phone Number',
+                prefixIcon: Icons.phone,
                 keyboardType: TextInputType.phone,
                 enabled: !_otpSent || _resendTimer == 0,
               ),
@@ -230,16 +225,10 @@ class _OTPScreenState extends State<OTPScreen> {
                     selectionHandleColor: AppTheme.primaryBlue,
                   ),
                 ),
-                child: TextField(
+                child: CustomTextField(
                   controller: _otpController,
-                  decoration: AppTheme.textFieldDecoration.copyWith(
-                    labelText: 'OTP Code',
-                    prefixIcon: Icon(Icons.lock, color: AppTheme.primaryBlue),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppTheme.primaryBlue),
-                    ),
-                  ),
+                  labelText: 'OTP Code',
+                  prefixIcon: Icons.lock,
                   keyboardType: TextInputType.number,
                 ),
               ),
