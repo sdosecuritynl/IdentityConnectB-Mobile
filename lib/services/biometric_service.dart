@@ -1,60 +1,62 @@
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
+import 'package:local_auth/error_codes.dart' as auth_error;
 
 class BiometricService {
   final LocalAuthentication _localAuth = LocalAuthentication();
   static const String _biometricEnabledKey = 'biometric_enabled';
 
-  Future<bool> isBiometricAvailable() async {
+  Future<bool> isBiometricsAvailable() async {
     try {
-      final isAvailable = await _localAuth.canCheckBiometrics;
-      final isDeviceSupported = await _localAuth.isDeviceSupported();
-      return isAvailable && isDeviceSupported;
+      // Check if biometrics is available on device
+      final bool canAuthenticateWithBiometrics = await _localAuth.canCheckBiometrics;
+      final bool canAuthenticate = canAuthenticateWithBiometrics || await _localAuth.isDeviceSupported();
+      
+      if (canAuthenticate) {
+        final availableBiometrics = await _localAuth.getAvailableBiometrics();
+        print('[Biometric] Available biometrics: $availableBiometrics');
+        return availableBiometrics.isNotEmpty;
+      }
+      
+      return false;
     } catch (e) {
-      print('[Biometric] Error checking availability: $e');
+      print('[Biometric] Error checking biometrics availability: $e');
       return false;
     }
   }
 
-  Future<bool> authenticate() async {
+  Future<bool> authenticateWithBiometrics() async {
     try {
-      // Check if biometrics are available
-      final isAvailable = await _localAuth.canCheckBiometrics;
-      final isDeviceSupported = await _localAuth.isDeviceSupported();
-      
-      if (!isAvailable || !isDeviceSupported) {
-        print('[Biometric] Biometrics not available on this device');
-        return true; // Allow access if biometrics are not available
+      final isAvailable = await isBiometricsAvailable();
+      if (!isAvailable) {
+        print('[Biometric] Biometrics not available');
+        return false;
       }
 
-      // Get available biometrics
-      final availableBiometrics = await _localAuth.getAvailableBiometrics();
-      if (availableBiometrics.isEmpty) {
-        print('[Biometric] No biometrics enrolled on this device');
-        return true;
-      }
-
-      print('[Biometric] Requesting biometric authentication');
-      final bool authenticated = await _localAuth.authenticate(
-        localizedReason: "Please verify your identity to continue",
+      final bool didAuthenticate = await _localAuth.authenticate(
+        localizedReason: 'Please authenticate to access the app',
         options: const AuthenticationOptions(
+          stickyAuth: true,
           biometricOnly: true,
-          stickyAuth: false, // Changed to false to prevent issues when app goes to background
           useErrorDialogs: true,
         ),
       );
 
-      print('[Biometric] Authentication result: $authenticated');
-      return authenticated;
+      print('[Biometric] Authentication result: $didAuthenticate');
+      return didAuthenticate;
     } on PlatformException catch (e) {
-      print('[Biometric] Platform exception during authentication: ${e.message}');
-      if (e.code == 'NotAvailable' || e.code == 'NotEnrolled') {
-        return true; // Allow access if biometrics become unavailable
+      print('[Biometric] Error during authentication: ${e.message}');
+      if (e.code == auth_error.notAvailable) {
+        print('[Biometric] No biometrics available on device');
+      } else if (e.code == auth_error.notEnrolled) {
+        print('[Biometric] No biometrics enrolled on device');
+      } else if (e.code == auth_error.lockedOut || e.code == auth_error.permanentlyLockedOut) {
+        print('[Biometric] Biometric authentication locked out');
       }
       return false;
     } catch (e) {
-      print('[Biometric] Authentication error: $e');
+      print('[Biometric] Unexpected error during authentication: $e');
       return false;
     }
   }

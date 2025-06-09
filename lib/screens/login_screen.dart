@@ -5,6 +5,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import '../services/auth_service.dart';
 import '../services/device_service.dart';
 import '../services/storage_service.dart';
+import '../services/biometric_service.dart';
 import '../theme/app_theme.dart';
 import 'home_screen.dart';
 import 'web_view_screen.dart';
@@ -21,8 +22,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final SecureStorageService _storage = SecureStorageService();
   final DeviceService _deviceService = DeviceService();
   final AuthService _authService = AuthService();
+  final BiometricService _biometricService = BiometricService();
 
   String? _message;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -40,7 +43,20 @@ class _LoginScreenState extends State<LoginScreen> {
         final email = decoded['email'] ?? decoded['sub'];
         
         if (uuidResult['verified'] == true) {
-          print('[Login] Device UUID verified, proceeding to home');
+          print('[Login] Device UUID verified, proceeding to biometric check');
+          
+          // Request biometric authentication
+          final authenticated = await _biometricService.authenticateWithBiometrics();
+          if (!authenticated) {
+            print('[Login] Biometric authentication failed');
+            setState(() {
+              _message = 'Biometric authentication required to access the app';
+              _isLoading = false;
+            });
+            return;
+          }
+          
+          print('[Login] Biometric authentication successful, proceeding to home');
           if (!mounted) return;
           await Navigator.pushReplacement(
             context,
@@ -61,7 +77,6 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           print('[Login] UUID verification failed, clearing token');
           await _storage.clearToken();
-          await _storage.clearUUID();
         }
       } else {
         print('[Login] No existing token found');
@@ -75,7 +90,10 @@ class _LoginScreenState extends State<LoginScreen> {
           e.toString().contains('403')) {
         print('[Login] Authentication error detected, clearing tokens');
         await _storage.clearToken();
-        await _storage.clearUUID();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -192,7 +210,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 final uuidResult = await _authService.verifyUUID(token);
                 
                 if (uuidResult['verified'] == true) {
-                  print('[Login] Device UUID verified, proceeding to home');
+                  print('[Login] Device UUID verified, proceeding to biometric check');
+                  
+                  // Request biometric authentication
+                  final authenticated = await _biometricService.authenticateWithBiometrics();
+                  if (!authenticated) {
+                    print('[Login] Biometric authentication failed');
+                    setState(() {
+                      _message = 'Biometric authentication required to access the app';
+                      _isLoading = false;
+                    });
+                    return;
+                  }
+                  
+                  print('[Login] Biometric authentication successful, proceeding to home');
                   if (!mounted) return;
                   await Navigator.pushReplacement(
                     context,
