@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
+import 'storage_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   final MethodChannel _channel = const MethodChannel('com.identityconnect.business/notifications');
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final SecureStorageService _storage = SecureStorageService();
   static const String _deviceTokenKey = 'device_token';
 
   factory NotificationService() {
@@ -21,11 +22,12 @@ class NotificationService {
     _channel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'storeDeviceToken':
-          await _storage.write(key: _deviceTokenKey, value: call.arguments as String);
-          print('[Flutter] Stored device token: ${call.arguments}');
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_deviceTokenKey, call.arguments as String);
+          print('[Flutter] Stored device token in SharedPreferences: ${call.arguments}');
           break;
         case 'getAuthToken':
-          final token = await _storage.read(key: 'auth_token');
+          final token = await _storage.getToken();
           print('[Flutter] Providing auth token for device registration');
           return token;
         case 'handleNotificationTap':
@@ -55,7 +57,8 @@ class NotificationService {
   }
 
   Future<String?> getDeviceToken() async {
-    return await _storage.read(key: _deviceTokenKey);
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_deviceTokenKey);
   }
 
   // Call this method after successful authentication

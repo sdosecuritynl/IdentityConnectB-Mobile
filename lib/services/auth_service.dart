@@ -10,11 +10,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
+import 'storage_service.dart';
 
 class CustomSamlAuth {
-  final _storage = const FlutterSecureStorage();
+  final _storage = SecureStorageService();
   static const String _tokenKey = 'auth_token';
-  static const String _uuidKey = 'device_id';
 
   final String clientId = '3kfl9g8p032atbj43rnildrrgr';
   final String cognitoDomain = 'us-east-1id8zqgdw7.auth.us-east-1.amazoncognito.com';
@@ -83,7 +83,7 @@ class CustomSamlAuth {
         if (idToken != null) {
           print('[Auth] Received valid JWT token');
           print('[Auth] Token type: ${idToken.startsWith('eyJ') ? 'JWT' : 'Unknown'}');
-          await _storage.write(key: _tokenKey, value: idToken);
+          await _storage.saveToken(idToken);
           return idToken;
         } else {
           print('[Auth] No ID token found in response. Available keys: ${data.keys.join(', ')}');
@@ -106,7 +106,7 @@ class CustomSamlAuth {
   }
 
   Future<String?> getStoredToken() async {
-    final token = await _storage.read(key: _tokenKey);
+    final token = await _storage.getToken();
     if (token != null) {
       print('Retrieved stored token first 20 chars: ${token.substring(0, 20)}...');
     } else {
@@ -117,7 +117,7 @@ class CustomSamlAuth {
 
   Future<bool> deleteUser() async {
     try {
-      final token = await _storage.read(key: _tokenKey);
+      final token = await _storage.getToken();
       if (token == null) {
         print('[DeleteUser] No token found');
         return false;
@@ -146,15 +146,15 @@ class CustomSamlAuth {
   Future<void> clearLocalData() async {
     try {
       print('[ClearLocal] Clearing secure storage...');
-      await _storage.delete(key: _tokenKey);
+      await _storage.clearToken();
       
       print('[ClearLocal] Clearing shared preferences...');
       final prefs = await SharedPreferences.getInstance();
       // Clear everything except device ID
-      final deviceId = await _storage.read(key: _uuidKey);
+      final deviceId = await _storage.getUUID();
       await prefs.clear();
       if (deviceId != null) {
-        await _storage.write(key: _uuidKey, value: deviceId);
+        await _storage.saveUUID(deviceId);
       }
       
       print('[ClearLocal] All local data cleared');
@@ -201,15 +201,15 @@ class CustomSamlAuth {
   Future<void> signOutLocally(BuildContext context) async {
     try {
       print('[LocalSignOut] Clearing secure storage...');
-      await _storage.delete(key: _tokenKey);
+      await _storage.clearToken();
       
       print('[LocalSignOut] Clearing shared preferences...');
       final prefs = await SharedPreferences.getInstance();
       // Clear everything except device ID
-      final deviceId = await _storage.read(key: _uuidKey);
+      final deviceId = await _storage.getUUID();
       await prefs.clear();
       if (deviceId != null) {
-        await _storage.write(key: _uuidKey, value: deviceId);
+        await _storage.saveUUID(deviceId);
       }
       
       print('[LocalSignOut] All local data cleared');
@@ -267,12 +267,11 @@ class CustomSamlAuth {
 }
 
 class AuthService {
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final SecureStorageService _storage = SecureStorageService();
   final String _cognitoUrl = 'https://us-east-1id8zqgdw7.auth.us-east-1.amazoncognito.com';
   final String _clientId = '3kfl9g8p032atbj43rnildrrgr';
   final String _redirectUri = 'myapp://callback/';
   final String _identityProvider = 'sdosecurity.com';
-  static const String _uuidKey = 'device_id';
   final String _baseUrl = 'https://d3oyxmwcqyuai5.cloudfront.net';
 
   Map<String, String> _getAuthHeaders(String token) {
@@ -288,17 +287,17 @@ class AuthService {
   }
 
   Future<String> getDeviceId() async {
-    String? uuid = await _storage.read(key: _uuidKey);
+    String? uuid = await _storage.getUUID();
     if (uuid == null) {
-      // Generate a proper UUID instead of timestamp
+      // Generate a proper UUID
       uuid = const Uuid().v4();
-      await _storage.write(key: _uuidKey, value: uuid);
+      await _storage.saveUUID(uuid);
       print('[Auth] Generated new device ID: $uuid');
     } else {
       // If the stored UUID is a timestamp (old format), generate a new UUID
       if (uuid.length <= 13 && int.tryParse(uuid) != null) {
         uuid = const Uuid().v4();
-        await _storage.write(key: _uuidKey, value: uuid);
+        await _storage.saveUUID(uuid);
         print('[Auth] Converted old timestamp ID to UUID: $uuid');
       } else {
         print('[Auth] Retrieved existing device ID: $uuid');
