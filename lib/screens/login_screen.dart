@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Image.asset('assets/logo.png', height: 120),
                     const SizedBox(height: 24),
                     Text(
-                      'IdentityConnect.io\nBusiness',
+                      'IdentityConnect.io',
                       textAlign: TextAlign.center,
                       style: AppTheme.titleLarge.copyWith(fontSize: 24),
                     ),
@@ -92,16 +92,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             side: BorderSide(color: AppTheme.textGrey.withOpacity(0.2)),
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.security, color: AppTheme.primaryBlue, size: 24),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Login with your company SSO',
-                              style: AppTheme.buttonText.copyWith(color: AppTheme.textDark),
-                            ),
-                          ],
+                        child: Text(
+                          'Login',
+                          style: AppTheme.buttonText.copyWith(color: AppTheme.textDark),
                         ),
                       ),
                     ),

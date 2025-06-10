@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_header.dart';
+import '../theme/app_theme.dart';
 import 'user_info_screen.dart';
 import 'verified_ids_screen.dart';
 import 'addresses_screen.dart';
@@ -8,14 +10,14 @@ class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
 
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin {
   int _selectedIndex = 0;
   final _searchController = TextEditingController();
-  late AnimationController _controller;
-  late List<Animation<double>> _animations;
+  late final AnimationController _controller;
+  late final List<Animation<double>> _animations;
 
   final List<Widget> _screens = [
     const UserInfoScreen(),
@@ -39,27 +41,19 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       vsync: this,
     );
 
-    // Create animations for each icon
-    _animations = List.generate(
-      4,
-      (index) => Tween<double>(
-        begin: 1.0,
-        end: 1.2,
-      ).animate(
+    // Create animations for each tab
+    _animations = List.generate(4, (index) {
+      return Tween<double>(begin: 1.0, end: 1.2).animate(
         CurvedAnimation(
           parent: _controller,
           curve: Interval(
-            index / 4,
-            (index + 1) / 4,
+            index * 0.2, // Stagger the animations
+            index * 0.2 + 0.5,
             curve: Curves.easeInOut,
           ),
         ),
-      ),
-    );
-
-    // Initial animation for the first selected item
-    _animations[_selectedIndex].addListener(() => setState(() {}));
-    _controller.forward();
+      );
+    });
   }
 
   @override
@@ -71,74 +65,53 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
 
   void _onItemTapped(int index) {
     setState(() {
-      // Reset previous animation
-      _animations[_selectedIndex] = Tween<double>(
-        begin: 1.0,
-        end: 1.2,
-      ).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(
-            _selectedIndex / 4,
-            (_selectedIndex + 1) / 4,
-            curve: Curves.easeInOut,
-          ),
-        ),
-      );
-
       _selectedIndex = index;
-
-      // Setup new animation
-      _animations[_selectedIndex] = Tween<double>(
-        begin: 1.0,
-        end: 1.2,
-      ).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(
-            index / 4,
-            (index + 1) / 4,
-            curve: Curves.easeInOut,
-          ),
-        ),
-      );
-
-      // Add listener to the new animation
-      _animations[_selectedIndex].addListener(() => setState(() {}));
     });
-
-    // Reset and start animation
-    _controller.reset();
-    _controller.forward();
+    _controller.forward(from: 0);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              showSearch(
-                context: context,
-                delegate: _SearchDelegate(_titles[_selectedIndex]),
-              );
-            },
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          const AppHeader(),
+          Expanded(
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: _screens,
+            ),
           ),
         ],
       ),
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: _onItemTapped,
-        destinations: [
-          _buildNavigationDestination(0, Icons.person_outline, Icons.person, 'My Info'),
-          _buildNavigationDestination(1, Icons.credit_card_outlined, Icons.credit_card, 'IDs'),
-          _buildNavigationDestination(2, Icons.location_on_outlined, Icons.location_on, 'Addresses'),
-          _buildNavigationDestination(3, Icons.business_outlined, Icons.business, 'Suppliers'),
-        ],
+      bottomNavigationBar: Container(
+        height: 90,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 0,
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: NavigationBar(
+          height: 90,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: _onItemTapped,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: [
+            _buildNavigationDestination(0, Icons.person_outline, Icons.person, 'My Info'),
+            _buildNavigationDestination(1, Icons.badge_outlined, Icons.badge, 'IDs'),
+            _buildNavigationDestination(2, Icons.location_on_outlined, Icons.location_on, 'Addresses'),
+            _buildNavigationDestination(3, Icons.business_outlined, Icons.business, 'Suppliers'),
+          ],
+        ),
       ),
     );
   }
@@ -150,7 +123,11 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     return NavigationDestination(
       icon: Transform.scale(
         scale: isSelected ? scale : 1.0,
-        child: Icon(isSelected ? filledIcon : outlinedIcon),
+        child: Icon(
+          isSelected ? filledIcon : outlinedIcon,
+          color: isSelected ? AppTheme.primaryBlue : Colors.grey,
+          size: 28,
+        ),
       ),
       label: label,
     );

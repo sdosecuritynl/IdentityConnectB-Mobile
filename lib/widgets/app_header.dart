@@ -28,38 +28,28 @@ class AppHeader extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Centered content that stays fixed
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
                     'assets/logo.png',
-                    height: 24,
-                    width: 24,
+                    height: 32,
+                    width: 32,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Text(
                     'IdentityConnect',
                     style: TextStyle(
                       color: AppTheme.primaryBlue,
-                      fontSize: 17,
+                      fontSize: 22,
                       fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    ' - Business',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ],
               ),
             ),
-            // Back button that overlays without affecting center alignment
             if (showBackButton)
               Positioned(
                 left: 4,
