@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
-import 'home_screen.dart';
+import 'home_screen2.dart';
 import 'dart:async';
 
 class OTPScreen extends StatefulWidget {
-  final String email;
-  final String token;
-
-  const OTPScreen({
-    Key? key,
-    required this.email,
-    required this.token,
-  }) : super(key: key);
+  const OTPScreen({Key? key}) : super(key: key);
 
   @override
   State<OTPScreen> createState() => _OTPScreenState();
@@ -24,7 +16,6 @@ class _OTPScreenState extends State<OTPScreen> {
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
   final _authService = AuthService();
-  final _notificationService = NotificationService();
   bool _isLoading = false;
   bool _otpSent = false;
   String? _error;
@@ -67,7 +58,7 @@ class _OTPScreenState extends State<OTPScreen> {
     });
 
     try {
-      final success = await _authService.sendOTP(_phoneController.text, widget.token);
+      final success = await _authService.sendOTP(_phoneController.text);
       
       if (mounted) {
         setState(() {
@@ -108,48 +99,17 @@ class _OTPScreenState extends State<OTPScreen> {
       final success = await _authService.verifyOTP(
         _phoneController.text,
         _otpController.text,
-        widget.token,
       );
 
       if (success) {
-        print('[OTP] OTP verification successful, registering device');
+        print('[OTP] OTP verification successful');
         
-        // First register the device
-        final deviceRegistration = await _authService.registerDevice(
-          widget.email,
-          widget.token,
-        );
-
-        if (deviceRegistration == null || deviceRegistration['registered'] != true) {
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-              _error = 'Device registration failed. Please try again.';
-            });
-          }
-          return;
-        }
-
-        print('[OTP] Device registration successful, registering push token');
-        
-        // Then register push notification token if available
-        final deviceToken = await _notificationService.getDeviceToken();
-        if (deviceToken != null) {
-          final tokenResult = await _authService.registerPushToken(
-            widget.token,
-            deviceToken,
-          );
-          print('[OTP] Push token registration result: ${tokenResult['status']}');
-        } else {
-          print('[OTP] No device token available yet');
-        }
-
-        // Continue to home screen
+        // Continue to main screen
         if (!mounted) return;
-        print('[OTP] Navigation to home screen');
+        print('[OTP] Navigation to main screen');
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => HomeScreen(email: widget.email)),
+          MaterialPageRoute(builder: (_) => const MainScreen()),
         );
         return;
       }
@@ -248,7 +208,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 onPressed: _isLoading ? null : (_otpSent ? _verifyOTP : _sendOTP),
                 style: AppTheme.primaryButtonStyle,
                 child: _isLoading
-                    ? SizedBox(
+                    ? const SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
@@ -256,19 +216,9 @@ class _OTPScreenState extends State<OTPScreen> {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _otpSent ? Icons.check_circle : Icons.send,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _otpSent ? 'Verify OTP' : 'Send OTP',
-                            style: AppTheme.buttonText.copyWith(color: Colors.white),
-                          ),
-                        ],
+                    : Text(
+                        _otpSent ? 'Verify OTP' : 'Send OTP',
+                        style: AppTheme.buttonText,
                       ),
               ),
             ),
@@ -276,9 +226,9 @@ class _OTPScreenState extends State<OTPScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 16),
                 child: Text(
-                  'Resend code in $_resendTimer seconds',
+                  'Resend OTP in $_resendTimer seconds',
                   textAlign: TextAlign.center,
-                  style: AppTheme.bodyText,
+                  style: AppTheme.bodyText.copyWith(color: AppTheme.textGrey),
                 ),
               ),
           ],

@@ -1,5 +1,5 @@
-name: identity_connect
-description: A secure identity and authentication app.
+name: app
+description: IdentityConnect Business Edition
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -11,36 +11,19 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  flutter_secure_storage: ^8.0.0
-  shared_preferences: ^2.2.2
-  jwt_decoder: ^2.0.1
-  device_info_plus: ^10.0.1
+  http: ^1.1.0
+  flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.2.0
+  device_info_plus: ^9.0.2
   uuid: ^4.3.3
-  http: ^1.2.0
   flutter_jailbreak_detection: ^1.10.0
-  crypto: ^3.0.6
-  local_auth: ^2.1.6
-  flutter_web_auth_2: ^2.0.3
-  url_launcher: ^6.2.5
-  rxdart: ^0.27.0
-  webview_flutter: ^4.4.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1
   flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/logo.png"
-  min_sdk_android: 21
-  remove_alpha_ios: true
-  web:
-    generate: false
