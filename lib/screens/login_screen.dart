@@ -7,7 +7,7 @@ import '../services/device_service.dart';
 import '../services/storage_service.dart';
 import '../services/biometric_service.dart';
 import '../theme/app_theme.dart';
-import 'home_screen.dart';
+import 'home_screen2.dart';
 import 'web_view_screen.dart';
 import 'otp_screen.dart';
 
@@ -56,11 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
             return;
           }
           
-          print('[Login] Biometric authentication successful, proceeding to home');
+          print('[Login] Biometric authentication successful, proceeding to main screen');
           if (!mounted) return;
           await Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => HomeScreen(email: email)),
+            MaterialPageRoute(builder: (_) => const MainScreen()),
           );
         } else if (uuidResult['status'] == 'not_registered' || uuidResult['status'] == 'mismatch') {
           print('[Login] Device not registered or UUID mismatch, starting OTP flow');
@@ -223,11 +223,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     return;
                   }
                   
-                  print('[Login] Biometric authentication successful, proceeding to home');
+                  print('[Login] Biometric authentication successful, proceeding to main screen');
                   if (!mounted) return;
                   await Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (_) => HomeScreen(email: email)),
+                    MaterialPageRoute(builder: (_) => const MainScreen()),
                   );
                 } else {
                   print('[Login] Device not registered or UUID mismatch, starting OTP flow');
