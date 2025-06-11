@@ -129,7 +129,17 @@ class _OTPScreenState extends State<OTPScreen> {
           print('[OTP] Error during key generation/encryption: $e');
           setState(() {
             _isLoading = false;
-            _error = 'Error setting up security. Please try again.';
+            // Extract the actual error message from the exception
+            final errorMsg = e.toString();
+            if (errorMsg.contains('Failed to access secure storage')) {
+              _error = 'Unable to access secure storage. Please check app permissions.';
+            } else if (errorMsg.contains('Failed to generate RSA key pair')) {
+              _error = 'Unable to generate security keys. Please try again.';
+            } else if (errorMsg.contains('Failed to validate')) {
+              _error = 'Security setup validation failed. Please try again.';
+            } else {
+              _error = 'Error setting up security. Please try again.';
+            }
           });
         }
         return;

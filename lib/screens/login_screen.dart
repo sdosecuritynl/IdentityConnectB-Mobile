@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: Colors.black,
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 24),
                     GestureDetector(
                       onTap: _isLoading ? null : _handleLogin,
                       child: Text(

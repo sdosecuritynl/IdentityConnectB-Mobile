@@ -5,6 +5,7 @@ import 'user_info_screen.dart';
 import 'verified_ids_screen.dart';
 import 'addresses_screen.dart';
 import 'suppliers_screen.dart';
+import 'my_information_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -13,76 +14,101 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   int _selectedIndex = 0;
-  final _searchController = TextEditingController();
-  late final AnimationController _controller;
-  late final List<Animation<double>> _animations;
-
-  final List<Widget> _screens = [
-    const UserInfoScreen(),
-    const VerifiedIDsScreen(),
-    const AddressesScreen(),
-    const SuppliersScreen(),
-  ];
-
-  final List<String> _titles = [
-    'My Information',
-    'Verified IDs',
-    'Addresses',
-    'Suppliers',
-  ];
+  final List<AnimationController> _controllers = [];
+  final List<Animation<double>> _animations = [];
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    // Create animations for each tab
-    _animations = List.generate(4, (index) {
-      return Tween<double>(begin: 1.0, end: 1.2).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(
-            index * 0.2, // Stagger the animations
-            index * 0.2 + 0.5,
-            curve: Curves.easeInOut,
-          ),
+    // Initialize animation controllers for each tab
+    for (int i = 0; i < 4; i++) {
+      final controller = AnimationController(
+        duration: const Duration(milliseconds: 200),
+        vsync: this,
+      );
+      _controllers.add(controller);
+      _animations.add(
+        Tween<double>(begin: 1.0, end: 1.2).animate(
+          CurvedAnimation(parent: controller, curve: Curves.easeInOut),
         ),
       );
-    });
+    }
+    // Start animation for initial selected tab
+    _controllers[0].forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    _searchController.dispose();
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   void _onItemTapped(int index) {
+    if (_selectedIndex == index) return;
+    
     setState(() {
+      // Reset previous selection
+      _controllers[_selectedIndex].reverse();
       _selectedIndex = index;
+      // Animate new selection
+      _controllers[index].forward();
     });
-    _controller.forward(from: 0);
+  }
+
+  Widget _buildIcon(IconData icon, int index) {
+    return ScaleTransition(
+      scale: _animations[index],
+      child: Icon(
+        icon,
+        size: 28,
+        color: _selectedIndex == index ? AppTheme.primaryBlue : Colors.grey,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          const AppHeader(),
-          Expanded(
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: _screens,
-            ),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        toolbarHeight: 80,
+        automaticallyImplyLeading: false,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Row(
+            children: [
+              Image.asset(
+                'assets/logo.png',
+                width: 32,
+                height: 32,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'IdentityConnect.io',
+                style: AppTheme.titleLarge.copyWith(
+                  fontSize: 22,
+                  color: Colors.black,
+                ),
+              ),
+            ],
           ),
+        ),
+      ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          const MyInformationScreen(), // My Info tab
+          const Center(child: Text('IDs')), // IDs tab
+          const Center(child: Text('Addresses')), // Addresses tab
+          const Center(child: Text('Suppliers')), // Suppliers tab
         ],
       ),
       bottomNavigationBar: Container(
@@ -91,45 +117,48 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 0,
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 10,
-              offset: const Offset(0, -2),
+              offset: const Offset(0, -5),
             ),
           ],
         ),
-        child: NavigationBar(
-          height: 90,
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
-          elevation: 0,
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: _onItemTapped,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: [
-            _buildNavigationDestination(0, Icons.person_outline, Icons.person, 'My Info'),
-            _buildNavigationDestination(1, Icons.badge_outlined, Icons.badge, 'IDs'),
-            _buildNavigationDestination(2, Icons.location_on_outlined, Icons.location_on, 'Addresses'),
-            _buildNavigationDestination(3, Icons.business_outlined, Icons.business, 'Suppliers'),
+          selectedItemColor: AppTheme.primaryBlue,
+          unselectedItemColor: Colors.grey,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          selectedLabelStyle: AppTheme.bodyText.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: AppTheme.bodyText.copyWith(
+            fontSize: 12,
+          ),
+          items: [
+            BottomNavigationBarItem(
+              icon: _buildIcon(Icons.person_outline, 0),
+              label: 'My Info',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildIcon(Icons.credit_card, 1),
+              label: 'IDs',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildIcon(Icons.location_on_outlined, 2),
+              label: 'Addresses',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildIcon(Icons.business_outlined, 3),
+              label: 'Suppliers',
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildNavigationDestination(int index, IconData outlinedIcon, IconData filledIcon, String label) {
-    final isSelected = _selectedIndex == index;
-    final scale = _animations[index].value;
-
-    return NavigationDestination(
-      icon: Transform.scale(
-        scale: isSelected ? scale : 1.0,
-        child: Icon(
-          isSelected ? filledIcon : outlinedIcon,
-          color: isSelected ? AppTheme.primaryBlue : Colors.grey,
-          size: 28,
-        ),
-      ),
-      label: label,
     );
   }
 }

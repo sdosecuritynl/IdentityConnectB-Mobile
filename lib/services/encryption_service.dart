@@ -1,35 +1,124 @@
 import 'dart:convert';
-import 'package:fast_rsa/fast_rsa.dart';
+import 'dart:math';
+import 'dart:typed_data';
+import 'package:pointycastle/export.dart';
+import 'package:pointycastle/asn1.dart';
+import 'package:basic_utils/basic_utils.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class EncryptionService {
   static const String _publicKeyKey = 'public_key';
   static const String _privateKeyKey = 'private_key';
-  final _storage = const FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage(
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock,
+      synchronizable: true,
+    ),
+    mOptions: MacOsOptions(
+      accessibility: KeychainAccessibility.first_unlock,
+      synchronizable: true,
+    ),
+  );
 
-  // Generate key pair if not exists
-  Future<void> generateKeyPairIfNeeded() async {
-    print('[Encryption] Checking for existing key pair...');
-    final publicKey = await _storage.read(key: _publicKeyKey);
-    final privateKey = await _storage.read(key: _privateKeyKey);
+  // Generate RSA key pair
+  Future<AsymmetricKeyPair<PublicKey, PrivateKey>> _generateRSAKeyPair(SecureRandom secureRandom) async {
+    print('[Encryption] Configuring RSA key generator...');
+    final keyGen = RSAKeyGenerator()
+      ..init(ParametersWithRandom(
+        RSAKeyGeneratorParameters(BigInt.parse('65537'), 2048, 64),
+        secureRandom,
+      ));
 
-    if (publicKey == null || privateKey == null) {
-      print('[Encryption] No existing key pair found, generating new pair...');
-      try {
-        final keyPair = await RSA.generate(2048);
-        await _storage.write(key: _publicKeyKey, value: keyPair.publicKey);
-        await _storage.write(key: _privateKeyKey, value: keyPair.privateKey);
-        print('[Encryption] Key pair generated and stored successfully');
-      } catch (e) {
-        print('[Encryption] Error generating key pair: $e');
-        throw Exception('Failed to generate key pair: $e');
+    print('[Encryption] Generating RSA key pair...');
+    return keyGen.generateKeyPair();
+  }
+
+  // Convert public key to PEM format
+  String _publicKeyToPem(RSAPublicKey publicKey) {
+    return CryptoUtils.encodeRSAPublicKeyToPem(publicKey);
+  }
+
+  // Convert private key to PEM format
+  String _privateKeyToPem(RSAPrivateKey privateKey) {
+    return CryptoUtils.encodeRSAPrivateKeyToPem(privateKey);
+  }
+
+  // Check if secure storage is accessible
+  Future<bool> _checkStorageAccess() async {
+    try {
+      print('[Encryption] Testing secure storage access...');
+      const testKey = 'storage_test';
+      const testValue = 'test_value';
+      
+      await _storage.write(key: testKey, value: testValue);
+      final readValue = await _storage.read(key: testKey);
+      await _storage.delete(key: testKey);
+      
+      if (readValue == testValue) {
+        print('[Encryption] Secure storage access test successful');
+        return true;
+      } else {
+        print('[Encryption] Secure storage access test failed: values do not match');
+        return false;
       }
-    } else {
-      print('[Encryption] Existing key pair found');
+    } catch (e) {
+      print('[Encryption] Secure storage access test failed with error: $e');
+      return false;
     }
   }
 
-  // Fetch public key
+  // Generate key pair if not exists
+  Future<void> generateKeyPairIfNeeded() async {
+    print('[Encryption] Starting key pair generation/verification process...');
+    
+    if (!await _checkStorageAccess()) {
+      throw Exception('Cannot access secure storage. Please check app permissions and try again.');
+    }
+
+    try {
+      final publicKey = await _storage.read(key: _publicKeyKey);
+      final privateKey = await _storage.read(key: _privateKeyKey);
+      print('[Encryption] Successfully read from secure storage. Public key exists: ${publicKey != null}, Private key exists: ${privateKey != null}');
+
+      if (publicKey == null || privateKey == null) {
+        print('[Encryption] No existing key pair found, generating new pair...');
+        try {
+          // Create a secure random number generator
+          final secureRandom = FortunaRandom();
+          final random = Random.secure();
+          final seeds = List<int>.generate(32, (i) => random.nextInt(256));
+          secureRandom.seed(KeyParameter(Uint8List.fromList(seeds)));
+
+          // Generate the RSA key pair
+          final keyPair = await _generateRSAKeyPair(secureRandom);
+          print('[Encryption] Key pair generated, converting to PEM format...');
+
+          // Convert keys to PEM format
+          final publicKeyPem = _publicKeyToPem(keyPair.publicKey as RSAPublicKey);
+          final privateKeyPem = _privateKeyToPem(keyPair.privateKey as RSAPrivateKey);
+          
+          print('[Encryption] Storing keys...');
+          await _storage.write(key: _publicKeyKey, value: publicKeyPem);
+          print('[Encryption] Public key stored successfully');
+          
+          await _storage.write(key: _privateKeyKey, value: privateKeyPem);
+          print('[Encryption] Private key stored successfully');
+          
+          print('[Encryption] Key pair generated and stored successfully');
+        } catch (e) {
+          print('[Encryption] Error during key generation: $e');
+          throw Exception('Failed to generate RSA key pair: $e');
+        }
+      } else {
+        print('[Encryption] Existing key pair found');
+      }
+    } catch (e) {
+      print('[Encryption] Fatal error in generateKeyPairIfNeeded: $e');
+      throw Exception('Failed to setup encryption: $e');
+    }
+  }
+
+  // Get public key
   Future<String> getPublicKey() async {
     print('[Encryption] Fetching public key...');
     try {
@@ -47,7 +136,7 @@ class EncryptionService {
     }
   }
 
-  // Fetch private key
+  // Get private key
   Future<String> getPrivateKey() async {
     print('[Encryption] Fetching private key...');
     try {
@@ -65,35 +154,53 @@ class EncryptionService {
     }
   }
 
-  // Encrypt dictionary using public key
-  Future<String> encrypt(Map<String, dynamic> data, String publicKey) async {
+  // Encrypt data
+  Future<String> encrypt(Map<String, dynamic> data, String publicKeyPem) async {
     print('[Encryption] Starting encryption process...');
     try {
-      // Convert dictionary to JSON string
+      // Convert data to JSON string
       final jsonStr = jsonEncode(data);
-      print('[Encryption] Data converted to JSON successfully');
+      final dataToEncrypt = Uint8List.fromList(utf8.encode(jsonStr));
+      print('[Encryption] Data converted to bytes successfully');
 
-      // Encrypt the JSON string
-      final encrypted = await RSA.encryptPKCS1v15(jsonStr, publicKey);
+      // Parse PEM public key
+      final publicKey = CryptoUtils.rsaPublicKeyFromPem(publicKeyPem);
+
+      // Create encrypter
+      final cipher = OAEPEncoding(RSAEngine())
+        ..init(true, PublicKeyParameter<RSAPublicKey>(publicKey));
+
+      // Encrypt data
+      final encrypted = cipher.process(dataToEncrypt);
       print('[Encryption] Data encrypted successfully');
 
-      return encrypted;
+      return base64.encode(encrypted);
     } catch (e) {
       print('[Encryption] Error during encryption: $e');
       throw Exception('Failed to encrypt data: $e');
     }
   }
 
-  // Decrypt data using private key (for testing purposes)
-  Future<Map<String, dynamic>> decrypt(String encryptedData, String privateKey) async {
+  // Decrypt data
+  Future<Map<String, dynamic>> decrypt(String encryptedBase64, String privateKeyPem) async {
     print('[Encryption] Starting decryption process...');
     try {
-      // Decrypt the data
-      final decrypted = await RSA.decryptPKCS1v15(encryptedData, privateKey);
+      final encrypted = base64.decode(encryptedBase64);
+      
+      // Parse PEM private key
+      final privateKey = CryptoUtils.rsaPrivateKeyFromPem(privateKeyPem);
+
+      // Create decrypter
+      final cipher = OAEPEncoding(RSAEngine())
+        ..init(false, PrivateKeyParameter<RSAPrivateKey>(privateKey));
+
+      // Decrypt data
+      final decrypted = cipher.process(Uint8List.fromList(encrypted));
       print('[Encryption] Data decrypted successfully');
 
       // Parse JSON string back to dictionary
-      final data = jsonDecode(decrypted) as Map<String, dynamic>;
+      final jsonStr = utf8.decode(decrypted);
+      final data = jsonDecode(jsonStr) as Map<String, dynamic>;
       print('[Encryption] Data parsed back to dictionary successfully');
 
       return data;
