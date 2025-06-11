@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _handleSSOLogin() async {
+  void _handleLogin() async {
     setState(() => _isLoading = true);
 
     // Navigate directly to OTP screen
@@ -67,34 +67,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       'IdentityConnect.io',
                       textAlign: TextAlign.center,
-                      style: AppTheme.titleLarge.copyWith(fontSize: 24),
+                      style: AppTheme.titleLarge.copyWith(
+                        fontSize: 24,
+                        color: Colors.black,
+                      ),
                     ),
                     const SizedBox(height: 40),
-                    Container(
-                      decoration: AppTheme.buttonDecoration.copyWith(
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.textGrey.withOpacity(0.2),
-                            spreadRadius: 0,
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _handleSSOLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            side: BorderSide(color: AppTheme.textGrey.withOpacity(0.2)),
-                          ),
-                        ),
-                        child: Text(
-                          'Login',
-                          style: AppTheme.buttonText.copyWith(color: AppTheme.textDark),
+                    GestureDetector(
+                      onTap: _isLoading ? null : _handleLogin,
+                      child: Text(
+                        'Login',
+                        style: TextStyle(
+                          color: AppTheme.primaryBlue,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),

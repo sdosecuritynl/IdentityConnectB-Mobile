@@ -42,7 +42,7 @@ class AppHeader extends StatelessWidget {
                   Text(
                     'IdentityConnect',
                     style: TextStyle(
-                      color: AppTheme.primaryBlue,
+                      color: Colors.black,
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
                     ),
