@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/encryption_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
 import 'home_screen2.dart';
@@ -16,6 +17,7 @@ class _OTPScreenState extends State<OTPScreen> {
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
   final _authService = AuthService();
+  final _encryptionService = EncryptionService();
   bool _isLoading = false;
   bool _otpSent = false;
   String? _error;
@@ -104,13 +106,32 @@ class _OTPScreenState extends State<OTPScreen> {
       if (success) {
         print('[OTP] OTP verification successful');
         
-        // Continue to main screen
-        if (!mounted) return;
-        print('[OTP] Navigation to main screen');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainScreen()),
-        );
+        // Generate key pair after successful verification
+        print('[OTP] Generating encryption key pair...');
+        try {
+          await _encryptionService.generateKeyPairIfNeeded();
+          print('[OTP] Key pair generated/verified successfully');
+          
+          // Test the encryption (for debugging purposes)
+          final publicKey = await _encryptionService.getPublicKey();
+          final testData = {'test': 'data', 'timestamp': DateTime.now().toIso8601String()};
+          final encrypted = await _encryptionService.encrypt(testData, publicKey);
+          print('[OTP] Test encryption successful: ${encrypted.substring(0, 50)}...');
+          
+          // Continue to main screen
+          if (!mounted) return;
+          print('[OTP] Navigation to main screen');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const MainScreen()),
+          );
+        } catch (e) {
+          print('[OTP] Error during key generation/encryption: $e');
+          setState(() {
+            _isLoading = false;
+            _error = 'Error setting up security. Please try again.';
+          });
+        }
         return;
       }
 
