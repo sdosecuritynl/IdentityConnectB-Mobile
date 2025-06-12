@@ -38,7 +38,7 @@ class MyInformationScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  "We understand you want to delete your account, and that's ok.\n",
+                  "We understand you want to delete your account, and that's ok.",
                   style: AppTheme.bodyText.copyWith(
                     fontSize: 14,
                     color: Colors.black87,
@@ -179,8 +179,121 @@ class MyInformationScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                // Privacy Information Button
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: InkWell(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Dialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Data Privacy',
+                                          style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () => Navigator.of(context).pop(),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'At IdentityConnect, your personal data is stored only on your device and is never shared unless you explicitly choose to share it with a verified third party.',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'We only store your phone number on our servers, which helps identify your account.',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    const Text(
+                                      'Why is this secure?',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'Even if someone gets access to your phone number, they cannot impersonate you.',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'To verify your identity, every user must complete a secure enrollment process:',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 16),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('• Face Liveness Detection',
+                                              style: TextStyle(fontSize: 16)),
+                                          SizedBox(height: 4),
+                                          Text('• Selfie Matching',
+                                              style: TextStyle(fontSize: 16)),
+                                          SizedBox(height: 4),
+                                          Text('• ID Document Scan',
+                                              style: TextStyle(fontSize: 16)),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'This means only you can activate or re-enroll on a new device.\n\nNo shortcuts, no backdoors.',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Your Data Stays Private',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 _buildDisabledTextField('Full Name', 'Avraham Cohen'),
                 _buildDisabledTextField('Date of Birth', '22-11-1985'),
                 const SizedBox(height: 16),
