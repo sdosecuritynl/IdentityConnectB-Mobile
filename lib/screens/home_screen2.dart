@@ -74,40 +74,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        toolbarHeight: 80,
-        automaticallyImplyLeading: false,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: Row(
-            children: [
-              Image.asset(
-                'assets/logo.png',
-                width: 32,
-                height: 32,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'IdentityConnect.io',
-                style: AppTheme.titleLarge.copyWith(
-                  fontSize: 22,
-                  color: Colors.black,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
           const MyInformationScreen(), // My Info tab
           const Center(child: Text('IDs')), // IDs tab
-          const Center(child: Text('Addresses')), // Addresses tab
+          const AddressesScreen(), // Addresses tab
           const Center(child: Text('Suppliers')), // Suppliers tab
         ],
       ),

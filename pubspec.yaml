@@ -29,3 +29,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
+    - assets/
+    - assets/empty_addresses.png
