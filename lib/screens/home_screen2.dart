@@ -80,7 +80,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           const MyInformationScreen(), // My Info tab
           const VerifiedIDsScreen(), // IDs tab
           const AddressesScreen(), // Addresses tab
-          const Center(child: Text('Suppliers')), // Suppliers tab
+          const SuppliersScreen(), // Suppliers tab
         ],
       ),
       bottomNavigationBar: Container(
