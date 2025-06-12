@@ -31,3 +31,4 @@ flutter:
     - assets/logo.png
     - assets/
     - assets/empty_addresses.png
+    - assets/empty_ids.png

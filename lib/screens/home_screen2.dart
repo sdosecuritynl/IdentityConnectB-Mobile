@@ -78,7 +78,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         index: _selectedIndex,
         children: [
           const MyInformationScreen(), // My Info tab
-          const Center(child: Text('IDs')), // IDs tab
+          const VerifiedIDsScreen(), // IDs tab
           const AddressesScreen(), // Addresses tab
           const Center(child: Text('Suppliers')), // Suppliers tab
         ],
