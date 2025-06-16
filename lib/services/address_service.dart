@@ -48,4 +48,22 @@ class AddressService {
       throw Exception('Failed to delete address');
     }
   }
+
+  Future<void> updateAddress(Address address) async {
+    try {
+      final addresses = await getAddresses();
+      final index = addresses.indexWhere((a) => a.id == address.id);
+      if (index != -1) {
+        addresses[index] = address;
+        final jsonList = addresses.map((addr) => addr.toJson()).toList();
+        await _storage.write(key: _storageKey, value: jsonEncode(jsonList));
+        print('[AddressService] Address updated successfully');
+      } else {
+        throw Exception('Address not found');
+      }
+    } catch (e) {
+      print('[AddressService] Error updating address: $e');
+      throw Exception('Failed to update address');
+    }
+  }
 } 

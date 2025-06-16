@@ -112,17 +112,49 @@ class _AddressesScreenState extends State<AddressesScreen> {
                             ),
                           ),
                           onDismissed: (direction) => _deleteAddress(address),
-                          child: ListTile(
-                            title: Text(address.name),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(address.organization),
-                                Text('${address.streetAddress}, ${address.city}'),
-                                Text('${address.state}, ${address.country} ${address.zipCode}'),
-                              ],
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            isThreeLine: true,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddAddressScreen(address: address),
+                                  ),
+                                );
+                                if (result == true) {
+                                  await _loadAddresses();
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      address.streetAddress,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${address.city}, ${address.state} ${address.zipCode}, ${address.country}',
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         );
                       },
