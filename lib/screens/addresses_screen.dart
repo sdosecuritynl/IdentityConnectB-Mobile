@@ -114,45 +114,101 @@ class _AddressesScreenState extends State<AddressesScreen> {
                           onDismissed: (direction) => _deleteAddress(address),
                           child: Card(
                             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            elevation: 2,
+                            elevation: 4,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AddAddressScreen(address: address),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Top row: icon + name
+                                  Row(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.shade50,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        padding: const EdgeInsets.all(8),
+                                        child: const Icon(
+                                          Icons.location_on,
+                                          color: Colors.blue,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          address.name,
+                                          style: const TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                );
-                                if (result == true) {
-                                  await _loadAddresses();
-                                }
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      address.streetAddress,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                  const SizedBox(height: 12),
+                                  const Divider(thickness: 1),
+                                  const SizedBox(height: 12),
+                                  // Address block
+                                  Text(
+                                    address.streetAddress,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${address.city}, ${address.state} ${address.zipCode}, ${address.country}',
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        color: Colors.black87,
-                                      ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${address.city} , ${address.state} ${address.zipCode}',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.grey,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    address.country,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Divider(thickness: 1),
+                                  const SizedBox(height: 8),
+                                  // Contact row
+                                  Row(
+                                    children: [
+                                      Icon(Icons.phone, size: 16, color: Colors.grey),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        flex: 2,
+                                        child: Text(
+                                          address.phone,
+                                          style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Icon(Icons.email, size: 16, color: Colors.grey),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        flex: 3,
+                                        child: Text(
+                                          address.email,
+                                          style: const TextStyle(fontSize: 15, color: Colors.black87),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ),
