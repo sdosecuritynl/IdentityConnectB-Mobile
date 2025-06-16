@@ -209,7 +209,9 @@ class _MyInformationScreenState extends State<MyInformationScreen> {
               : RefreshIndicator(
                   onRefresh: _loadDefaultAddress,
                   child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
