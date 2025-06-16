@@ -3,7 +3,7 @@ import '../services/auth_service.dart';
 import '../services/encryption_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
-import 'home_screen2.dart';
+import 'home_screen.dart';
 import 'dart:async';
 
 class OTPScreen extends StatefulWidget {

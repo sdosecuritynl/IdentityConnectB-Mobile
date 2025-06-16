@@ -1,22 +1,71 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_header.dart';
-import 'identity_center_screen.dart';
+import '../theme/app_theme.dart';
+import 'user_info_screen.dart';
+import 'verified_ids_screen.dart';
+import 'addresses_screen.dart';
+import 'suppliers_screen.dart';
+import 'my_information_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  final String email;
+class MainScreen extends StatefulWidget {
+  const MainScreen({Key? key}) : super(key: key);
 
-  // Define brand colors
-  static const Color primaryBlue = Color(0xFF0066CC);  // Main blue from logo
-  static const Color accentBlue = Color(0xFF00A3FF);   // Lighter blue accent
-  static const Color textDark = Color(0xFF1A1F36);     // Dark text color
-  static const Color textGrey = Color(0xFF6B7280);     // Secondary text color
+  @override
+  State<MainScreen> createState() => _MainScreenState();
+}
 
-  const HomeScreen({super.key, required this.email});
+class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
+  int _selectedIndex = 0;
+  final List<AnimationController> _controllers = [];
+  final List<Animation<double>> _animations = [];
 
-  void _goToIdentityCenter(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => IdentityCenterScreen(email: email)),
+  @override
+  void initState() {
+    super.initState();
+    // Initialize animation controllers for each tab
+    for (int i = 0; i < 4; i++) {
+      final controller = AnimationController(
+        duration: const Duration(milliseconds: 200),
+        vsync: this,
+      );
+      _controllers.add(controller);
+      _animations.add(
+        Tween<double>(begin: 1.0, end: 1.2).animate(
+          CurvedAnimation(parent: controller, curve: Curves.easeInOut),
+        ),
+      );
+    }
+    // Start animation for initial selected tab
+    _controllers[0].forward();
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    if (_selectedIndex == index) return;
+    
+    setState(() {
+      // Reset previous selection
+      _controllers[_selectedIndex].reverse();
+      _selectedIndex = index;
+      // Animate new selection
+      _controllers[index].forward();
+    });
+  }
+
+  Widget _buildIcon(IconData icon, int index) {
+    return ScaleTransition(
+      scale: _animations[index],
+      child: Icon(
+        icon,
+        size: 28,
+        color: _selectedIndex == index ? AppTheme.primaryBlue : Colors.grey,
+      ),
     );
   }
 
@@ -24,91 +73,59 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const AppHeader(),
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 96.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _InfoSection(
-                          title: 'Verify Identity Before You Trust',
-                          description: 'Always verify before making critical actions.\nConfirm the identity of your colleague or vendor - fast, secure, and reliable.',
-                          icon: Icons.verified_user,
-                          iconColor: primaryBlue,
-                          backgroundColor: accentBlue.withOpacity(0.05),
-                        ),
-                        _InfoSection(
-                          title: 'Employee to Employee Communication',
-                          description: "When a colleague reaches out with a sensitive request use IdentityConnect to verify it's really them.",
-                          icon: Icons.people,
-                          iconColor: primaryBlue,
-                          backgroundColor: accentBlue.withOpacity(0.05),
-                        ),
-                        _InfoSection(
-                          title: 'Employee to Vendor Communication',
-                          description: 'Before processing requesst from a vendor,\nverify their identity in real time with IdentityConnect.',
-                          icon: Icons.business,
-                          iconColor: primaryBlue,
-                          backgroundColor: accentBlue.withOpacity(0.05),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    left: 24,
-                    right: 24,
-                    bottom: 24,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primaryBlue.withOpacity(0.3),
-                            spreadRadius: 0,
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () => _goToIdentityCenter(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.security, size: 24),
-                            SizedBox(width: 12),
-                            Text(
-                              'Identity Center',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: [
+          const MyInformationScreen(), // My Info tab
+          const VerifiedIDsScreen(), // IDs tab
+          const AddressesScreen(), // Addresses tab
+          const SuppliersScreen(), // Suppliers tab
+        ],
+      ),
+      bottomNavigationBar: Container(
+        height: 90,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: AppTheme.primaryBlue,
+          unselectedItemColor: Colors.grey,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          selectedLabelStyle: AppTheme.bodyText.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: AppTheme.bodyText.copyWith(
+            fontSize: 12,
+          ),
+          items: [
+            BottomNavigationBarItem(
+              icon: _buildIcon(Icons.person_outline, 0),
+              label: 'My Info',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildIcon(Icons.credit_card, 1),
+              label: 'IDs',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildIcon(Icons.location_on_outlined, 2),
+              label: 'Addresses',
+            ),
+            BottomNavigationBarItem(
+              icon: _buildIcon(Icons.business_outlined, 3),
+              label: 'Suppliers',
             ),
           ],
         ),
@@ -117,76 +134,46 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _InfoSection extends StatelessWidget {
-  final String title;
-  final String description;
-  final IconData icon;
-  final Color iconColor;
-  final Color backgroundColor;
+class _SearchDelegate extends SearchDelegate {
+  final String section;
 
-  const _InfoSection({
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.iconColor,
-    required this.backgroundColor,
-  });
+  _SearchDelegate(this.section);
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: iconColor.withOpacity(0.1),
-          width: 1,
-        ),
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: HomeScreen.textDark,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            description,
-            style: TextStyle(
-              fontSize: 15,
-              color: HomeScreen.textGrey,
-              height: 1.5,
-              letterSpacing: -0.3,
-            ),
-          ),
-        ],
-      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
     );
   }
-}
+
+  @override
+  Widget buildResults(BuildContext context) {
+    // Implement search results based on the section
+    return Center(
+      child: Text('Search results for "$query" in $section'),
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // Implement search suggestions based on the section
+    return Center(
+      child: Text('Type to search in $section'),
+    );
+  }
+} 

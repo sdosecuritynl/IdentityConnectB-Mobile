@@ -8,7 +8,6 @@ import 'auth_service.dart';
 import 'storage_service.dart';
 
 class ApiService {
-  final CustomSamlAuth _authService = CustomSamlAuth();
   final SecureStorageService _storage = SecureStorageService();
   static const String baseUrl = 'https://d3oyxmwcqyuai5.cloudfront.net';
 
@@ -31,7 +30,7 @@ class ApiService {
     final token = await _storage.getToken();
     if (token == null) {
       if (context.mounted) {
-        _authService.handleTokenExpiration(context, 'No token found');
+        // TODO: Handle token expiration
       }
       throw Exception('Authentication token not found');
     }
@@ -78,20 +77,9 @@ class ApiService {
         print('[ApiService] /$endpoint error response: ${response.body}');
       }
 
-      // Check for token expiration
-      if (context.mounted && _authService.isTokenExpired(response)) {
-        print('[ApiService] Token expired for /$endpoint');
-        _authService.handleTokenExpiration(context, response.body);
-        throw Exception('Token expired');
-      }
-
       return response;
     } catch (e) {
       print('[ApiService] Error in /$endpoint request: $e');
-      if (context.mounted) {
-        // Check if error might be token related
-        _authService.handleTokenExpiration(context, e.toString());
-      }
       rethrow;
     }
   }
