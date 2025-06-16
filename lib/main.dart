@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/login_screen.dart';
 import 'theme/app_theme.dart';
+import 'services/debug_service.dart';
 
 // Global navigator key for handling navigation from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -28,8 +29,9 @@ class FadePageRoute<T> extends PageRouteBuilder<T> {
         );
 }
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await DebugService().printAllStoredData();
   runApp(const MyApp());
 }
 
