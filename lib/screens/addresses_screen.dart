@@ -102,10 +102,23 @@ class _AddressesScreenState extends State<AddressesScreen> {
                           itemCount: _addresses.length,
                           itemBuilder: (context, index) {
                             final address = _addresses[index];
+                            final isDefault = index == 0;
                             return Dismissible(
                               key: Key(address.id),
-                              direction: DismissDirection.endToStart,
+                              direction: DismissDirection.horizontal,
                               background: Container(
+                                color: Colors.green,
+                                alignment: Alignment.centerLeft,
+                                padding: const EdgeInsets.only(left: 24),
+                                child: Row(
+                                  children: const [
+                                    Icon(Icons.edit, color: Colors.white, size: 28),
+                                    SizedBox(width: 8),
+                                    Text('Edit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                                  ],
+                                ),
+                              ),
+                              secondaryBackground: Container(
                                 color: Colors.red,
                                 alignment: Alignment.centerRight,
                                 padding: const EdgeInsets.only(right: 16),
@@ -114,7 +127,24 @@ class _AddressesScreenState extends State<AddressesScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              onDismissed: (direction) => _deleteAddress(address),
+                              confirmDismiss: (direction) async {
+                                if (direction == DismissDirection.startToEnd) {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AddAddressScreen(address: address),
+                                    ),
+                                  );
+                                  if (result == true) {
+                                    await _loadAddresses();
+                                  }
+                                  return false;
+                                } else if (direction == DismissDirection.endToStart) {
+                                  await _deleteAddress(address);
+                                  return true;
+                                }
+                                return false;
+                              },
                               child: Card(
                                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 elevation: 4,
@@ -126,7 +156,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      // Top row: icon + name
+                                      // Top row: icon + name + default
                                       Row(
                                         children: [
                                           Container(
@@ -151,6 +181,11 @@ class _AddressesScreenState extends State<AddressesScreen> {
                                               ),
                                             ),
                                           ),
+                                          if (isDefault) ...[
+                                            const SizedBox(width: 8),
+                                            Icon(Icons.star, color: Colors.amber, size: 22),
+                                            const SizedBox(width: 4),
+                                          ],
                                         ],
                                       ),
                                       const SizedBox(height: 12),
