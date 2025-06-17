@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../services/storage_service.dart';
 import '../services/device_service.dart';
+import '../services/cognito_service.dart';
 import '../theme/app_theme.dart';
 import 'otp_screen.dart';
 
@@ -15,6 +16,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final SecureStorageService _storage = SecureStorageService();
   final DeviceService _deviceService = DeviceService();
+  final CognitoService _cognitoService = CognitoService();
   bool _isLoading = false;
   String? _message;
 
@@ -22,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _checkDeviceSecurity();
+    _checkExistingAuth();
   }
 
   Future<void> _checkDeviceSecurity() async {
@@ -33,19 +36,53 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _checkExistingAuth() async {
+    // Check if user is already authenticated
+    final isAuthenticated = await _cognitoService.isAuthenticated();
+    if (isAuthenticated) {
+      print('[Login] User already authenticated, redirecting to OTP screen');
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const OTPScreen()),
+      );
+    }
+  }
+
   void _handleLogin() async {
-    setState(() => _isLoading = true);
+    if (_isLoading) return;
+    
+    setState(() {
+      _isLoading = true;
+      _message = null;
+    });
 
-    // Navigate directly to OTP screen
-    if (!mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const OTPScreen(),
-      ),
-    );
-
-    setState(() => _isLoading = false);
+    try {
+      print('[Login] Starting Cognito authentication');
+      final success = await _cognitoService.authenticate(context);
+      
+      if (success) {
+        print('[Login] Authentication successful, redirecting to OTP screen');
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const OTPScreen()),
+        );
+      } else {
+        setState(() {
+          _message = 'Authentication failed. Please try again.';
+        });
+      }
+    } catch (e) {
+      print('[Login] Authentication error: $e');
+      setState(() {
+        _message = 'An error occurred during login. Please try again.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -73,24 +110,46 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    GestureDetector(
-                      onTap: _isLoading ? null : _handleLogin,
-                      child: Text(
-                        'Login',
-                        style: TextStyle(
-                          color: AppTheme.primaryBlue,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                    if (_isLoading)
+                      const CircularProgressIndicator()
+                    else
+                      GestureDetector(
+                        onTap: _handleLogin,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryBlue,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'Login',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
                     if (_message != null) ...[
                       const SizedBox(height: 24),
-                      Text(
-                        _message!,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.withOpacity(0.3)),
+                        ),
+                        child: Text(
+                          _message!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ],

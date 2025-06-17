@@ -50,7 +50,7 @@
   		<dict>
     		<key>CFBundleURLSchemes</key>
     		<array>
-      			<string>myapp</string>
+      			<string>identityconnect</string>
     		</array>
   		</dict>
 	</array>

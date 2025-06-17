@@ -1,24 +1,26 @@
-name: app
-description: IdentityConnect Business Edition
+name: identity_connect
+description: "Identity Connect"
 publish_to: 'none'
 
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.2.3 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  http: ^1.1.0
+  uuid: ^4.2.1
   flutter_secure_storage: ^9.0.0
   shared_preferences: ^2.2.0
   device_info_plus: ^9.0.2
-  uuid: ^4.3.3
   flutter_jailbreak_detection: ^1.10.0
   pointycastle: ^3.7.4
   basic_utils: ^5.7.0
+  flutter_web_auth_2: ^3.0.5
+  url_launcher: ^6.2.1
+  http: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -29,6 +31,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
-    - assets/
-    - assets/empty_addresses.png
     - assets/empty_ids.png

@@ -5,6 +5,9 @@ class SecureStorageService {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   static const String _uuidKey = 'device_uuid';
   static const String _tokenKey = 'auth_token';
+  static const String _refreshTokenKey = 'refresh_token';
+  static const String _emailKey = 'user_email';
+  static const String _phoneKey = 'user_phone';
 
   // Token operations use SharedPreferences (cleared on uninstall)
   Future<void> saveToken(String token) async {
@@ -36,6 +39,51 @@ class SecureStorageService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await _secureStorage.delete(key: _tokenKey);
+  }
+
+  // Refresh token operations
+  Future<void> saveRefreshToken(String refreshToken) async {
+    print('[Storage] Saving refresh token to secure storage');
+    await _secureStorage.write(key: _refreshTokenKey, value: refreshToken);
+  }
+  
+  Future<String?> getRefreshToken() async {
+    return await _secureStorage.read(key: _refreshTokenKey);
+  }
+  
+  Future<void> clearRefreshToken() async {
+    print('[Storage] Clearing refresh token from secure storage');
+    await _secureStorage.delete(key: _refreshTokenKey);
+  }
+
+  // Email operations
+  Future<void> saveEmail(String email) async {
+    print('[Storage] Saving email to secure storage');
+    await _secureStorage.write(key: _emailKey, value: email);
+  }
+  
+  Future<String?> getEmail() async {
+    return await _secureStorage.read(key: _emailKey);
+  }
+  
+  Future<void> clearEmail() async {
+    print('[Storage] Clearing email from secure storage');
+    await _secureStorage.delete(key: _emailKey);
+  }
+
+  // Phone number operations
+  Future<void> savePhoneNumber(String phoneNumber) async {
+    print('[Storage] Saving phone number to secure storage');
+    await _secureStorage.write(key: _phoneKey, value: phoneNumber);
+  }
+  
+  Future<String?> getPhoneNumber() async {
+    return await _secureStorage.read(key: _phoneKey);
+  }
+  
+  Future<void> clearPhoneNumber() async {
+    print('[Storage] Clearing phone number from secure storage');
+    await _secureStorage.delete(key: _phoneKey);
   }
 
   // UUID operations use secure storage (persist after uninstall)
