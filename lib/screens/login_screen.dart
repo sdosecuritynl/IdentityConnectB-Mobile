@@ -4,6 +4,7 @@ import '../services/storage_service.dart';
 import '../services/device_service.dart';
 import '../services/cognito_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/custom_text_field.dart';
 import 'otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final SecureStorageService _storage = SecureStorageService();
   final DeviceService _deviceService = DeviceService();
   final CognitoService _cognitoService = CognitoService();
+  final _emailController = TextEditingController();
   bool _isLoading = false;
   String? _message;
 
@@ -49,8 +51,26 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _handleLogin() async {
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _handleEmailLogin() async {
     if (_isLoading) return;
+    
+    // Dismiss keyboard first
+    FocusScope.of(context).unfocus();
+    
+    // Validate email
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !_isValidEmail(email)) {
+      setState(() {
+        _message = 'Please enter a valid email address.';
+      });
+      return;
+    }
     
     setState(() {
       _isLoading = true;
@@ -58,7 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      print('[Login] Starting Cognito authentication');
+      print('[Login] Starting Cognito authentication with email: $email');
+      // TODO: Pass email to Cognito authentication
       final success = await _cognitoService.authenticate(context);
       
       if (success) {
@@ -85,6 +106,22 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _handleSocialLogin(String provider) {
+    // TODO: Implement social login
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$provider login coming soon!'),
+        backgroundColor: AppTheme.primaryBlue,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  bool _isValidEmail(String email) {
+    return RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$').hasMatch(email);
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -94,70 +131,214 @@ class _LoginScreenState extends State<LoginScreen> {
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(32.0),
-            child: Center(
-              child: SingleChildScrollView(
+                          child: SingleChildScrollView(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset('assets/logo.png', height: 120),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
+                    // Logo and Title
+                    Image.asset('assets/logo.png', height: 100),
+                    const SizedBox(height: 16),
                     Text(
                       'IdentityConnect.io',
                       textAlign: TextAlign.center,
                       style: AppTheme.titleLarge.copyWith(
                         fontSize: 24,
-                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    if (_isLoading)
-                      const CircularProgressIndicator()
-                    else
-                      GestureDetector(
-                        onTap: _handleLogin,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryBlue,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Secure Identity Verification',
+                      style: AppTheme.bodyText.copyWith(
+                        fontSize: 14,
+                        color: AppTheme.textGrey,
                       ),
-                    if (_message != null) ...[
-                      const SizedBox(height: 24),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          _message!,
+                    ),
+                    const SizedBox(height: 32),
+                  
+                  // Email Login Section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: AppTheme.cardDecoration,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Get Started',
+                          style: AppTheme.titleMedium.copyWith(
+                            fontSize: 18,
+                            color: AppTheme.textDark,
+                          ),
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.red.shade700,
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        // Email Input
+                        CustomTextField(
+                          controller: _emailController,
+                          labelText: 'Email Address',
+                          hintText: 'Enter your email',
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: Icons.email_outlined,
+                          forceLowercase: true,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Sign In Button
+                        Container(
+                          decoration: AppTheme.buttonDecoration,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _handleEmailLogin,
+                            style: AppTheme.primaryButtonStyle.copyWith(
+                              padding: MaterialStateProperty.all(
+                                const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : Text(
+                                    'Continue',
+                                    style: AppTheme.buttonText.copyWith(color: Colors.white),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Divider
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: AppTheme.textGrey.withOpacity(0.3))),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'or continue with',
+                          style: AppTheme.bodyText.copyWith(
+                            color: AppTheme.textGrey,
                             fontSize: 14,
                           ),
                         ),
                       ),
+                      Expanded(child: Divider(color: AppTheme.textGrey.withOpacity(0.3))),
                     ],
-                  ],
-                ),
+                  ),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Social Login Icons Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildSocialIconButton(
+                        Icons.g_mobiledata,
+                        Colors.white,
+                        AppTheme.textDark,
+                        () => _handleSocialLogin('Google'),
+                      ),
+                      _buildSocialIconButton(
+                        Icons.apple,
+                        AppTheme.textDark,
+                        Colors.white,
+                        () => _handleSocialLogin('Apple'),
+                      ),
+                      _buildSocialIconButton(
+                        Icons.facebook,
+                        const Color(0xFF1877F2),
+                        Colors.white,
+                        () => _handleSocialLogin('Facebook'),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Error Message
+                  if (_message != null)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _message!,
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialIconButton(
+    IconData icon,
+    Color backgroundColor,
+    Color iconColor,
+    VoidCallback onPressed,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            spreadRadius: 0,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: iconColor,
+          padding: const EdgeInsets.all(16),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: backgroundColor == Colors.white 
+                  ? AppTheme.textGrey.withOpacity(0.2)
+                  : Colors.transparent,
+              width: 1,
+            ),
+          ),
+          minimumSize: const Size(64, 64),
+        ),
+        child: Icon(
+          icon, 
+          size: 28,
+          color: iconColor,
         ),
       ),
     );
