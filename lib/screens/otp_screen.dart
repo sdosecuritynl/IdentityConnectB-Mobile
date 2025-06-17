@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/encryption_service.dart';
+import '../services/cognito_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
 import 'home_screen.dart';
+import 'login_screen.dart';
 import 'dart:async';
 
 class OTPScreen extends StatefulWidget {
@@ -18,6 +20,7 @@ class _OTPScreenState extends State<OTPScreen> {
   final _otpController = TextEditingController();
   final _authService = AuthService();
   final _encryptionService = EncryptionService();
+  final _cognitoService = CognitoService();
   bool _isLoading = false;
   bool _otpSent = false;
   String? _error;
@@ -44,6 +47,38 @@ class _OTPScreenState extends State<OTPScreen> {
         timer.cancel();
       }
     });
+  }
+
+  Future<void> _backToLogin() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Sign out from Cognito
+      await _cognitoService.signOut();
+      
+      if (mounted) {
+        // Navigate back to login screen and clear all previous routes
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      print('[OTP] Error during sign out: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error signing out: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _sendOTP() async {
@@ -262,6 +297,19 @@ class _OTPScreenState extends State<OTPScreen> {
                   style: AppTheme.bodyText.copyWith(color: AppTheme.textGrey),
                 ),
               ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: TextButton(
+                onPressed: _isLoading ? null : _backToLogin,
+                child: Text(
+                  'Back',
+                  style: AppTheme.bodyText.copyWith(
+                    color: AppTheme.primaryBlue
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
