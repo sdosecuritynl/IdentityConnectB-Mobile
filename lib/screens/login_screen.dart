@@ -240,21 +240,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildSocialIconButton(
-                        Icons.g_mobiledata,
+                      _buildSocialIconButtonWithImage(
+                        'assets/icons/google_logo.png',
                         Colors.white,
-                        AppTheme.textDark,
                         () => _handleSocialLogin('Google'),
                       ),
-                      _buildSocialIconButton(
-                        Icons.apple,
-                        AppTheme.textDark,
+                      _buildSocialIconButtonWithImage(
+                        'assets/icons/apple_logo.png',
                         Colors.white,
                         () => _handleSocialLogin('Apple'),
                       ),
-                      _buildSocialIconButton(
-                        Icons.facebook,
-                        const Color(0xFF1877F2),
+                      _buildSocialIconButtonWithImage(
+                        'assets/icons/facebook_logo.png',
                         Colors.white,
                         () => _handleSocialLogin('Facebook'),
                       ),
@@ -299,10 +296,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSocialIconButton(
-    IconData icon,
+  Widget _buildSocialIconButtonWithImage(
+    String imagePath,
     Color backgroundColor,
-    Color iconColor,
     VoidCallback onPressed,
   ) {
     return Container(
@@ -321,24 +317,26 @@ class _LoginScreenState extends State<LoginScreen> {
         onPressed: _isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
-          foregroundColor: iconColor,
           padding: const EdgeInsets.all(16),
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
-              color: backgroundColor == Colors.white 
-                  ? AppTheme.textGrey.withOpacity(0.2)
-                  : Colors.transparent,
+              color: AppTheme.textGrey.withOpacity(0.2),
               width: 1,
             ),
           ),
           minimumSize: const Size(64, 64),
         ),
-        child: Icon(
-          icon, 
-          size: 28,
-          color: iconColor,
+        child: SizedBox(
+          width: 32,
+          height: 32,
+          child: Image.asset(
+            imagePath,
+            width: 32,
+            height: 32,
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );
