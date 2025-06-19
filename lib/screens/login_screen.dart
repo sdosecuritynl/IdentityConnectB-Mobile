@@ -1,5 +1,7 @@
 // File: screens/login_screen.dart
 import 'package:flutter/material.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
 import '../services/storage_service.dart';
 import '../services/device_service.dart';
 import '../services/cognito_service.dart';
@@ -18,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final SecureStorageService _storage = SecureStorageService();
   final DeviceService _deviceService = DeviceService();
   final CognitoService _cognitoService = CognitoService();
+  final LocalAuthentication _localAuth = LocalAuthentication();
   final _emailController = TextEditingController();
   bool _isLoading = false;
   String? _message;
@@ -27,6 +30,38 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _checkDeviceSecurity();
     _checkExistingAuth();
+    _authenticateWithFaceID();
+  }
+
+  Future<void> _authenticateWithFaceID() async {
+    try {
+      final isAvailable = await _localAuth.canCheckBiometrics;
+      final isDeviceSupported = await _localAuth.isDeviceSupported();
+      
+      if (isAvailable && isDeviceSupported) {
+        final bool didAuthenticate = await _localAuth.authenticate(
+          localizedReason: 'Please authenticate to access IdentityConnect',
+          options: const AuthenticationOptions(
+            biometricOnly: true,
+            stickyAuth: true,
+          ),
+        );
+
+        if (didAuthenticate) {
+          // Face ID successful - stay on login page
+          print('Face ID authentication successful - staying on login page');
+        } else {
+          // Face ID failed - let OS handle the default behavior
+          print('Face ID authentication failed - falling back to OS default behavior');
+        }
+      }
+    } on PlatformException catch (e) {
+      print('Face ID authentication error: ${e.message}');
+      // Let the OS handle the error with default behavior
+    } catch (e) {
+      print('Face ID authentication error: $e');
+      // Let the OS handle the error with default behavior
+    }
   }
 
   Future<void> _checkDeviceSecurity() async {
