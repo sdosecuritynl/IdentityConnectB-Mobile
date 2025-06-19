@@ -72,6 +72,14 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     
+    // Check for social login domains
+    if (_shouldUseSocialLogin(email)) {
+      setState(() {
+        _message = 'Please proceed with social logins instead.';
+      });
+      return;
+    }
+    
     setState(() {
       _isLoading = true;
       _message = null;
@@ -120,6 +128,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isValidEmail(String email) {
     return RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$').hasMatch(email);
+  }
+
+  bool _shouldUseSocialLogin(String email) {
+    final domain = email.toLowerCase().split('@').last;
+    final socialDomains = ['gmail.com', 'icloud.com', 'facebook.com'];
+    return socialDomains.contains(domain);
   }
 
   @override
