@@ -87,7 +87,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       print('[Login] Starting Cognito authentication with email: $email');
-      // TODO: Pass email to Cognito authentication
+      // Switch to email client configuration
+      _cognitoService.useEmailClient();
       final success = await _cognitoService.authenticate(context);
       
       if (success) {
@@ -114,16 +115,71 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _handleSocialLogin(String provider) {
-    // TODO: Implement social login
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$provider login coming soon!'),
-        backgroundColor: AppTheme.primaryBlue,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
+  void _handleSocialLogin(String provider) async {
+    if (provider == 'Google') {
+      await _handleGoogleLogin();
+    } else {
+      // TODO: Implement Apple and Facebook login
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$provider login coming soon!'),
+          backgroundColor: AppTheme.primaryBlue,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    // Dismiss keyboard
+    FocusScope.of(context).unfocus();
+    
+    setState(() {
+      _isLoading = true;
+      _message = null;
+    });
+
+    try {
+      // Switch to Google client configuration
+      _cognitoService.useGoogleClient();
+      
+      // Perform authentication
+      final success = await _cognitoService.authenticate(context);
+      
+      if (success) {
+        print('[Login] Google authentication successful, navigating to OTP screen');
+        if (mounted) {
+          // Add small delay to ensure all state is properly set
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const OTPScreen()),
+            );
+          }
+        }
+      } else {
+        print('[Login] Google authentication failed');
+        if (mounted) {
+          setState(() {
+            _message = 'Google login failed. Please try again.';
+          });
+        }
+      }
+    } catch (e, stackTrace) {
+      print('Google login error: $e');
+      print('Stack trace: $stackTrace');
+      if (mounted) {
+        setState(() {
+          _message = 'An error occurred during Google login. Please try again.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   bool _isValidEmail(String email) {

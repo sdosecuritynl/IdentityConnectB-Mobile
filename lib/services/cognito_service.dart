@@ -13,15 +13,39 @@ class CognitoService {
   factory CognitoService() => _instance;
   CognitoService._internal();
 
-  // Cognito configuration - matching Python implementation
-  static const String clientId = '1n3jip62lajg0ep8eji6e4udno';
-  static const String clientSecret = '1pbsk43e4iq5d05h7p4tnkgc14b2i5be4vhqmobgtcf9i4s6mhn8';
+  // Cognito configuration
   static const String authority = 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_yNsZDdSUn';
   static const String redirectUri = 'identityconnect://callback';
   static const String scope = 'email openid phone';
+  
+  // Default client (for email login)
+  static const String defaultClientId = '1n3jip62lajg0ep8eji6e4udno';
+  static const String defaultClientSecret = '1pbsk43e4iq5d05h7p4tnkgc14b2i5be4vhqmobgtcf9i4s6mhn8';
+  
+  // Google client
+  static const String googleClientId = '47jjine5sl9sb2t2tlj42m194t';
+  static const String googleClientSecret = '1kdehemc63fpi8dahifjhtkrfr7jc4mdepfp8806ad20ih5v7pvc';
+  
+  // Current client configuration
+  String _currentClientId = defaultClientId;
+  String _currentClientSecret = defaultClientSecret;
 
   // Cache for server metadata
   Map<String, dynamic>? _serverMetadata;
+
+  // Set client configuration for email login
+  void useEmailClient() {
+    _currentClientId = defaultClientId;
+    _currentClientSecret = defaultClientSecret;
+    print('[Cognito] Switched to email client: $_currentClientId');
+  }
+
+  // Set client configuration for Google login
+  void useGoogleClient() {
+    _currentClientId = googleClientId;
+    _currentClientSecret = googleClientSecret;
+    print('[Cognito] Switched to Google client: $_currentClientId');
+  }
 
   // Fetch server metadata from well-known configuration
   Future<Map<String, dynamic>> _getServerMetadata() async {
@@ -72,7 +96,7 @@ class CognitoService {
     final authorizationEndpoint = metadata['authorization_endpoint'] as String;
 
     final params = {
-      'client_id': clientId,
+      'client_id': _currentClientId,
       'response_type': 'code',
       'scope': scope,
       'redirect_uri': redirectUri,
@@ -99,7 +123,7 @@ class CognitoService {
       print('[Cognito] Token endpoint: $tokenEndpoint');
 
       // Create the authorization header for client authentication
-      final credentials = base64Encode(utf8.encode('$clientId:$clientSecret'));
+      final credentials = base64Encode(utf8.encode('$_currentClientId:$_currentClientSecret'));
       print('[Cognito] Client credentials prepared');
 
       final requestBody = {
@@ -160,14 +184,16 @@ class CognitoService {
   // Get user info from userinfo endpoint
   Future<Map<String, dynamic>?> _getUserInfo(String accessToken) async {
     try {
+      print('[Cognito] Getting server metadata for userinfo...');
       final metadata = await _getServerMetadata();
       final userinfoEndpoint = metadata['userinfo_endpoint'] as String?;
       
       if (userinfoEndpoint == null) {
-        print('[Cognito] No userinfo endpoint available');
+        print('[Cognito] No userinfo endpoint available in metadata');
         return null;
       }
 
+      print('[Cognito] Calling userinfo endpoint: $userinfoEndpoint');
       final response = await http.get(
         Uri.parse(userinfoEndpoint),
         headers: {
@@ -175,14 +201,21 @@ class CognitoService {
         },
       );
 
+      print('[Cognito] Userinfo response status: ${response.statusCode}');
+      print('[Cognito] Userinfo response body: ${response.body}');
+
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final userData = jsonDecode(response.body);
+        print('[Cognito] Parsed userinfo data: $userData');
+        return userData;
       } else {
         print('[Cognito] Failed to get user info: ${response.statusCode}');
+        print('[Cognito] Error response: ${response.body}');
         return null;
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('[Cognito] Error getting user info: $e');
+      print('[Cognito] Stack trace: $stackTrace');
       return null;
     }
   }
@@ -233,6 +266,7 @@ class CognitoService {
             print('[Cognito] === GETTING USER INFO ===');
             // Get user info from userinfo endpoint (similar to Python implementation)
             final userInfo = await _getUserInfo(accessToken);
+            print('[Cognito] User info from endpoint: $userInfo');
             
             // Also parse ID token if available
             Map<String, dynamic>? idTokenPayload;
@@ -318,7 +352,7 @@ class CognitoService {
       final metadata = await _getServerMetadata();
       final tokenEndpoint = metadata['token_endpoint'] as String;
 
-      final credentials = base64Encode(utf8.encode('$clientId:$clientSecret'));
+      final credentials = base64Encode(utf8.encode('$_currentClientId:$_currentClientSecret'));
 
       final response = await http.post(
         Uri.parse(tokenEndpoint),
