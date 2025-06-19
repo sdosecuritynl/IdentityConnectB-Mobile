@@ -8,6 +8,12 @@ class SecureStorageService {
   static const String _refreshTokenKey = 'refresh_token';
   static const String _emailKey = 'user_email';
   static const String _phoneKey = 'user_phone';
+  static const String _fullNameKey = 'user_full_name';
+  static const String _dateOfBirthKey = 'user_date_of_birth';
+  static const String _licenseNumberKey = 'user_license_number';
+  static const String _licenseExpirationKey = 'user_license_expiration';
+  static const String _passportNumberKey = 'user_passport_number';
+  static const String _passportExpirationKey = 'user_passport_expiration';
 
   // Token operations use SharedPreferences (cleared on uninstall)
   Future<void> saveToken(String token) async {
@@ -117,6 +123,61 @@ class SecureStorageService {
     await _secureStorage.delete(key: _uuidKey);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_uuidKey);
+  }
+
+  // User information operations
+  Future<void> saveFullName(String fullName) async {
+    print('[Storage] Saving full name to secure storage');
+    await _secureStorage.write(key: _fullNameKey, value: fullName);
+  }
+  
+  Future<String?> getFullName() async {
+    return await _secureStorage.read(key: _fullNameKey);
+  }
+  
+  Future<void> saveDateOfBirth(String dateOfBirth) async {
+    print('[Storage] Saving date of birth to secure storage');
+    await _secureStorage.write(key: _dateOfBirthKey, value: dateOfBirth);
+  }
+  
+  Future<String?> getDateOfBirth() async {
+    return await _secureStorage.read(key: _dateOfBirthKey);
+  }
+  
+  Future<void> saveLicenseNumber(String licenseNumber) async {
+    print('[Storage] Saving license number to secure storage');
+    await _secureStorage.write(key: _licenseNumberKey, value: licenseNumber);
+  }
+  
+  Future<String?> getLicenseNumber() async {
+    return await _secureStorage.read(key: _licenseNumberKey);
+  }
+  
+  Future<void> saveLicenseExpiration(String licenseExpiration) async {
+    print('[Storage] Saving license expiration to secure storage');
+    await _secureStorage.write(key: _licenseExpirationKey, value: licenseExpiration);
+  }
+  
+  Future<String?> getLicenseExpiration() async {
+    return await _secureStorage.read(key: _licenseExpirationKey);
+  }
+  
+  Future<void> savePassportNumber(String passportNumber) async {
+    print('[Storage] Saving passport number to secure storage');
+    await _secureStorage.write(key: _passportNumberKey, value: passportNumber);
+  }
+  
+  Future<String?> getPassportNumber() async {
+    return await _secureStorage.read(key: _passportNumberKey);
+  }
+  
+  Future<void> savePassportExpiration(String passportExpiration) async {
+    print('[Storage] Saving passport expiration to secure storage');
+    await _secureStorage.write(key: _passportExpirationKey, value: passportExpiration);
+  }
+  
+  Future<String?> getPassportExpiration() async {
+    return await _secureStorage.read(key: _passportExpirationKey);
   }
 
   // Clear all storage

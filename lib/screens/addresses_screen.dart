@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/address.dart';
 import '../services/address_service.dart';
 import 'add_address_screen.dart';
+import '../widgets/app_header.dart';
 
 class AddressesScreen extends StatefulWidget {
   const AddressesScreen({super.key});
@@ -60,6 +61,8 @@ class _AddressesScreenState extends State<AddressesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const AppHeader(title: 'Addresses'),
+      drawer: const AppDrawer(),
       backgroundColor: const Color(0xFFF8F9FA),
       body: Stack(
         children: [

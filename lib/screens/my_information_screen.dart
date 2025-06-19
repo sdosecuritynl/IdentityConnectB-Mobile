@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/address_service.dart';
+import '../services/storage_service.dart';
 import '../models/address.dart';
+import '../widgets/app_header.dart';
 
 class MyInformationScreen extends StatefulWidget {
   const MyInformationScreen({Key? key}) : super(key: key);
@@ -10,138 +12,77 @@ class MyInformationScreen extends StatefulWidget {
   State<MyInformationScreen> createState() => _MyInformationScreenState();
 }
 
-class _MyInformationScreenState extends State<MyInformationScreen> {
+class _MyInformationScreenState extends State<MyInformationScreen> with RouteAware {
   final AddressService _addressService = AddressService();
+  final SecureStorageService _storage = SecureStorageService();
   Address? _defaultAddress;
   bool _isLoading = true;
+  
+  // User information
+  String _fullName = '';
+  String _dateOfBirth = '';
+  String _licenseNumber = '';
+  String _licenseExpiration = '';
+  String _passportNumber = '';
+  String _passportExpiration = '';
 
   @override
   void initState() {
     super.initState();
-    _loadDefaultAddress();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await Future.wait([
+      _loadDefaultAddress(),
+      _loadUserInformation(),
+    ]);
   }
 
   Future<void> _loadDefaultAddress() async {
     try {
       final addresses = await _addressService.getAddresses();
-      setState(() {
-        _defaultAddress = addresses.isNotEmpty ? addresses[0] : null;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _defaultAddress = addresses.isNotEmpty ? addresses[0] : null;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
+      print('[MyInfo] Error loading addresses: $e');
     }
   }
 
-  void _showDeleteAccountDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Delete Account',
-                      style: AppTheme.titleMedium.copyWith(
-                        fontSize: 20,
-                        color: Colors.black,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "We understand you want to delete your account, and that's ok.",
-                  style: AppTheme.bodyText.copyWith(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildBulletPoint('All your personal information is stored on your device.'),
-                _buildBulletPoint('Data transfer is secured by E2E encryption.'),
-                _buildBulletPoint('IdentityConnect reduces identity fraud.'),
-                const SizedBox(height: 16),
-                Text(
-                  'If you have questions please reach out to info@identityconnect.io',
-                  style: AppTheme.bodyText.copyWith(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Handle account deletion
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Delete My Account',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  Future<void> _loadUserInformation() async {
+    try {
+      final results = await Future.wait([
+        _storage.getFullName(),
+        _storage.getDateOfBirth(),
+        _storage.getLicenseNumber(),
+        _storage.getLicenseExpiration(),
+        _storage.getPassportNumber(),
+        _storage.getPassportExpiration(),
+      ]);
+      
+      if (mounted) {
+        setState(() {
+          _fullName = results[0] ?? '';
+          _dateOfBirth = results[1] ?? '';
+          _licenseNumber = results[2] ?? '';
+          _licenseExpiration = results[3] ?? '';
+          _passportNumber = results[4] ?? '';
+          _passportExpiration = results[5] ?? '';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('[MyInfo] Error loading user information: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  Widget _buildBulletPoint(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '• ',
-            style: AppTheme.bodyText.copyWith(
-              fontSize: 14,
-              color: Colors.black87,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTheme.bodyText.copyWith(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildDisabledTextField(String label, String value) {
     return Padding(
@@ -203,11 +144,13 @@ class _MyInformationScreenState extends State<MyInformationScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
+        appBar: const AppHeader(title: 'My Information'),
+        drawer: const AppDrawer(),
         body: SafeArea(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : RefreshIndicator(
-                  onRefresh: _loadDefaultAddress,
+                  onRefresh: _loadData,
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
@@ -330,8 +273,8 @@ class _MyInformationScreenState extends State<MyInformationScreen> {
                             ),
                           ),
                         ),
-                        _buildDisabledTextField('Full Name', 'Avraham Cohen'),
-                        _buildDisabledTextField('Date of Birth', '22-11-1985'),
+                        _buildDisabledTextField('Full Name', _fullName.isEmpty ? '' : _fullName),
+                        _buildDisabledTextField('Date of Birth', _dateOfBirth.isEmpty ? '' : _dateOfBirth),
                         const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -350,8 +293,8 @@ class _MyInformationScreenState extends State<MyInformationScreen> {
                             style: AppTheme.titleMedium.copyWith(fontSize: 18),
                           ),
                         ),
-                        _buildDisabledTextField('License Number', '5370412950'),
-                        _buildDisabledTextField('Expiration', '10-14-2029'),
+                        _buildDisabledTextField('License Number', _licenseNumber.isEmpty ? '' : _licenseNumber),
+                        _buildDisabledTextField('Expiration', _licenseExpiration.isEmpty ? '' : _licenseExpiration),
                         const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -360,31 +303,8 @@ class _MyInformationScreenState extends State<MyInformationScreen> {
                             style: AppTheme.titleMedium.copyWith(fontSize: 18),
                           ),
                         ),
-                        _buildDisabledTextField('Passport Number', '24417285'),
-                        _buildDisabledTextField('Expiration', '01-02-2028'),
-                        const SizedBox(height: 32),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () => _showDeleteAccountDialog(context),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.red,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text(
-                                'Delete My Account',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                            ),
-                          ),
-                        ),
+                        _buildDisabledTextField('Passport Number', _passportNumber.isEmpty ? '' : _passportNumber),
+                        _buildDisabledTextField('Expiration', _passportExpiration.isEmpty ? '' : _passportExpiration),
                         const SizedBox(height: 24),
                       ],
                     ),

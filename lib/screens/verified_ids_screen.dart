@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_header.dart';
 
 class VerifiedIDsScreen extends StatelessWidget {
   const VerifiedIDsScreen({super.key});
@@ -6,6 +7,8 @@ class VerifiedIDsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const AppHeader(title: 'Verified IDs'),
+      drawer: const AppDrawer(),
       backgroundColor: const Color(0xFFF8F9FA),
       body: Stack(
         children: [

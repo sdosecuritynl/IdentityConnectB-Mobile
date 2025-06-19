@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/supplier.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_header.dart';
 
 class SuppliersScreen extends StatefulWidget {
   const SuppliersScreen({super.key});
@@ -47,6 +48,8 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const AppHeader(title: 'Suppliers'),
+      drawer: const AppDrawer(),
       backgroundColor: const Color(0xFFF8F9FA),
       body: SafeArea(
         child: Column(
