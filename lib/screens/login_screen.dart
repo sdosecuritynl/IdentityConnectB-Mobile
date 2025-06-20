@@ -153,8 +153,10 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleSocialLogin(String provider) async {
     if (provider == 'Google') {
       await _handleGoogleLogin();
+    } else if (provider == 'Facebook') {
+      await _handleFacebookLogin();
     } else {
-      // TODO: Implement Apple and Facebook login
+      // TODO: Implement Apple login
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$provider login coming soon!'),
@@ -207,7 +209,68 @@ class _LoginScreenState extends State<LoginScreen> {
       print('Stack trace: $stackTrace');
       if (mounted) {
         setState(() {
-          _message = 'An error occurred during Google login. Please try again.';
+          // Check if user canceled the login
+          if (e.toString().contains('CANCELED') || e.toString().contains('User canceled')) {
+            _message = null; // Don't show error message for user cancellation
+          } else {
+            _message = 'An error occurred during Google login. Please try again.';
+          }
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleFacebookLogin() async {
+    // Dismiss keyboard
+    FocusScope.of(context).unfocus();
+    
+    setState(() {
+      _isLoading = true;
+      _message = null;
+    });
+
+    try {
+      // Switch to Facebook client configuration
+      _cognitoService.useFacebookClient();
+      
+      // Perform authentication
+      final success = await _cognitoService.authenticate(context);
+      
+      if (success) {
+        print('[Login] Facebook authentication successful, navigating to OTP screen');
+        if (mounted) {
+          // Add small delay to ensure all state is properly set
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const OTPScreen()),
+            );
+          }
+        }
+      } else {
+        print('[Login] Facebook authentication failed');
+        if (mounted) {
+          setState(() {
+            _message = 'Facebook login failed. Please try again.';
+          });
+        }
+      }
+    } catch (e, stackTrace) {
+      print('Facebook login error: $e');
+      print('Stack trace: $stackTrace');
+      if (mounted) {
+        setState(() {
+          // Check if user canceled the login
+          if (e.toString().contains('CANCELED') || e.toString().contains('User canceled')) {
+            _message = null; // Don't show error message for user cancellation
+          } else {
+            _message = 'An error occurred during Facebook login. Please try again.';
+          }
         });
       }
     } finally {

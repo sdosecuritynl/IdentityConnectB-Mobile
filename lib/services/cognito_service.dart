@@ -26,6 +26,10 @@ class CognitoService {
   static const String googleClientId = '47jjine5sl9sb2t2tlj42m194t';
   static const String googleClientSecret = '1kdehemc63fpi8dahifjhtkrfr7jc4mdepfp8806ad20ih5v7pvc';
   
+  // Facebook client
+  static const String facebookClientId = '11isr1ab081ccjlp6i2k3ob7c2';
+  static const String facebookClientSecret = 'l73ocj0gq3oku4pec5aeris9djgk49gib1o7diljtkvg0bqlph4';
+  
   // Current client configuration
   String _currentClientId = defaultClientId;
   String _currentClientSecret = defaultClientSecret;
@@ -45,6 +49,17 @@ class CognitoService {
     _currentClientId = googleClientId;
     _currentClientSecret = googleClientSecret;
     print('[Cognito] Switched to Google client: $_currentClientId');
+  }
+
+  // Set client configuration for Facebook login
+  void useFacebookClient() {
+    _currentClientId = facebookClientId;
+    _currentClientSecret = facebookClientSecret;
+    print('[Cognito] Switched to Facebook client: $_currentClientId');
+    print('[Cognito] Facebook client secret length: ${_currentClientSecret.length}');
+    print('[Cognito] Facebook credentials verification:');
+    print('[Cognito] - Client ID: $facebookClientId');
+    print('[Cognito] - Secret: ${facebookClientSecret.substring(0, 10)}...');
   }
 
   // Fetch server metadata from well-known configuration
@@ -95,6 +110,9 @@ class CognitoService {
     final metadata = await _getServerMetadata();
     final authorizationEndpoint = metadata['authorization_endpoint'] as String;
 
+    print('[Cognito] Building auth URL with client ID: $_currentClientId');
+    print('[Cognito] Authorization endpoint: $authorizationEndpoint');
+
     final params = {
       'client_id': _currentClientId,
       'response_type': 'code',
@@ -104,6 +122,15 @@ class CognitoService {
       'code_challenge_method': 'S256',
       'state': state,
     };
+
+    // Add identity provider parameter for social logins
+    if (_currentClientId == facebookClientId) {
+      params['identity_provider'] = 'Facebook';
+      print('[Cognito] Added Facebook identity provider parameter');
+    } else if (_currentClientId == googleClientId) {
+      params['identity_provider'] = 'Google';
+      print('[Cognito] Added Google identity provider parameter');
+    }
 
     final queryString = params.entries
         .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')

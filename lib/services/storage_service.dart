@@ -14,40 +14,48 @@ class SecureStorageService {
   static const String _licenseExpirationKey = 'user_license_expiration';
   static const String _passportNumberKey = 'user_passport_number';
   static const String _passportExpirationKey = 'user_passport_expiration';
+  
+  // Session data keys (stored in SharedPreferences)
+  static const String _sessionKey = 'app_session';
+  static const String _lastLoginTimeKey = 'last_login_time';
+  static const String _loginAttemptCountKey = 'login_attempt_count';
 
-  // Token operations use SharedPreferences (cleared on uninstall)
+  // Auth token operations - NOW USE SECURE STORAGE
   Future<void> saveToken(String token) async {
-    print('[Storage] Saving token to SharedPreferences');
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
+    print('[Storage] Saving auth token to secure storage');
+    await _secureStorage.write(key: _tokenKey, value: token);
     
-    // Ensure it's not in secure storage
-    await _secureStorage.delete(key: _tokenKey);
+    // Remove from SharedPreferences if it exists (migration cleanup)
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
   }
   
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_tokenKey);
+    // Get from secure storage
+    final token = await _secureStorage.read(key: _tokenKey);
     
-    // Check if it's in secure storage and migrate if found
-    final secureToken = await _secureStorage.read(key: _tokenKey);
-    if (secureToken != null) {
-      print('[Storage] Found token in secure storage, migrating to SharedPreferences');
-      await saveToken(secureToken);
-      return secureToken;
+    // Check if it's in SharedPreferences and migrate if found
+    if (token == null) {
+      final prefs = await SharedPreferences.getInstance();
+      final sharedPrefsToken = prefs.getString(_tokenKey);
+      if (sharedPrefsToken != null) {
+        print('[Storage] Found token in SharedPreferences, migrating to secure storage');
+        await saveToken(sharedPrefsToken);
+        return sharedPrefsToken;
+      }
     }
     
     return token;
   }
   
   Future<void> clearToken() async {
-    print('[Storage] Clearing token from all storages');
+    print('[Storage] Clearing auth token from all storages');
+    await _secureStorage.delete(key: _tokenKey);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
-    await _secureStorage.delete(key: _tokenKey);
   }
 
-  // Refresh token operations
+  // Refresh token operations (already in secure storage)
   Future<void> saveRefreshToken(String refreshToken) async {
     print('[Storage] Saving refresh token to secure storage');
     await _secureStorage.write(key: _refreshTokenKey, value: refreshToken);
@@ -62,7 +70,57 @@ class SecureStorageService {
     await _secureStorage.delete(key: _refreshTokenKey);
   }
 
-  // Email operations
+  // Session data operations - USE SHARED PREFERENCES (cleared on uninstall)
+  Future<void> saveSession(String sessionData) async {
+    print('[Storage] Saving session data to SharedPreferences');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_sessionKey, sessionData);
+  }
+  
+  Future<String?> getSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_sessionKey);
+  }
+  
+  Future<void> clearSession() async {
+    print('[Storage] Clearing session data from SharedPreferences');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_sessionKey);
+  }
+  
+  Future<void> saveLastLoginTime(DateTime loginTime) async {
+    print('[Storage] Saving last login time to SharedPreferences');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastLoginTimeKey, loginTime.toIso8601String());
+  }
+  
+  Future<DateTime?> getLastLoginTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final timeString = prefs.getString(_lastLoginTimeKey);
+    if (timeString != null) {
+      return DateTime.tryParse(timeString);
+    }
+    return null;
+  }
+  
+  Future<void> saveLoginAttemptCount(int count) async {
+    print('[Storage] Saving login attempt count to SharedPreferences: $count');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_loginAttemptCountKey, count);
+  }
+  
+  Future<int> getLoginAttemptCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_loginAttemptCountKey) ?? 0;
+  }
+  
+  Future<void> clearLoginAttemptCount() async {
+    print('[Storage] Clearing login attempt count from SharedPreferences');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_loginAttemptCountKey);
+  }
+
+  // Email operations (secure storage)
   Future<void> saveEmail(String email) async {
     print('[Storage] Saving email to secure storage');
     await _secureStorage.write(key: _emailKey, value: email);
@@ -77,7 +135,7 @@ class SecureStorageService {
     await _secureStorage.delete(key: _emailKey);
   }
 
-  // Phone number operations
+  // Phone number operations (secure storage)
   Future<void> savePhoneNumber(String phoneNumber) async {
     print('[Storage] Saving phone number to secure storage');
     await _secureStorage.write(key: _phoneKey, value: phoneNumber);
@@ -92,7 +150,7 @@ class SecureStorageService {
     await _secureStorage.delete(key: _phoneKey);
   }
 
-  // UUID operations use secure storage (persist after uninstall)
+  // UUID operations (secure storage - persist after uninstall)
   Future<void> saveUUID(String uuid) async {
     print('[Storage] Saving UUID to secure storage: $uuid');
     await _secureStorage.write(key: _uuidKey, value: uuid);
@@ -125,7 +183,7 @@ class SecureStorageService {
     await prefs.remove(_uuidKey);
   }
 
-  // User information operations
+  // User information operations (secure storage)
   Future<void> saveFullName(String fullName) async {
     print('[Storage] Saving full name to secure storage');
     await _secureStorage.write(key: _fullNameKey, value: fullName);
@@ -180,9 +238,20 @@ class SecureStorageService {
     return await _secureStorage.read(key: _passportExpirationKey);
   }
 
-  // Clear all storage
+  // Clear operations
+  Future<void> clearSessionData() async {
+    print('[Storage] Clearing session data only (SharedPreferences)');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
+  
+  Future<void> clearSecureData() async {
+    print('[Storage] Clearing secure data only');
+    await _secureStorage.deleteAll();
+  }
+  
   Future<void> clearAll() async {
-    print('[Storage] Clearing all storage');
+    print('[Storage] Clearing all storage (secure + session)');
     await _secureStorage.deleteAll();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
