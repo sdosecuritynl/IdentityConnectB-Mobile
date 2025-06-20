@@ -6,6 +6,7 @@ class SecureStorageService {
   static const String _uuidKey = 'device_uuid';
   static const String _tokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _idTokenKey = 'id_token';
   static const String _emailKey = 'user_email';
   static const String _phoneKey = 'user_phone';
   static const String _fullNameKey = 'user_full_name';
@@ -68,6 +69,21 @@ class SecureStorageService {
   Future<void> clearRefreshToken() async {
     print('[Storage] Clearing refresh token from secure storage');
     await _secureStorage.delete(key: _refreshTokenKey);
+  }
+
+  // ID token operations (secure storage)
+  Future<void> saveIdToken(String idToken) async {
+    print('[Storage] Saving ID token to secure storage');
+    await _secureStorage.write(key: _idTokenKey, value: idToken);
+  }
+  
+  Future<String?> getIdToken() async {
+    return await _secureStorage.read(key: _idTokenKey);
+  }
+  
+  Future<void> clearIdToken() async {
+    print('[Storage] Clearing ID token from secure storage');
+    await _secureStorage.delete(key: _idTokenKey);
   }
 
   // Session data operations - USE SHARED PREFERENCES (cleared on uninstall)
@@ -255,5 +271,13 @@ class SecureStorageService {
     await _secureStorage.deleteAll();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+  }
+  
+  // Clear all authentication tokens
+  Future<void> clearAllTokens() async {
+    print('[Storage] Clearing all authentication tokens');
+    await clearToken();
+    await clearRefreshToken();
+    await clearIdToken();
   }
 }

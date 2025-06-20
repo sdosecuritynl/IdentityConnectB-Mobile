@@ -310,6 +310,10 @@ class CognitoService {
               await _storage.saveRefreshToken(refreshToken);
               print('[Cognito] Refresh token stored');
             }
+            if (idToken != null) {
+              await _storage.saveIdToken(idToken);
+              print('[Cognito] ID token stored');
+            }
             
             // Store user info (prefer userinfo endpoint data, fallback to ID token)
             final userData = userInfo ?? idTokenPayload;
@@ -397,11 +401,16 @@ class CognitoService {
         final tokens = jsonDecode(response.body);
         final accessToken = tokens['access_token'];
         final newRefreshToken = tokens['refresh_token'];
+        final newIdToken = tokens['id_token'];
 
         if (accessToken != null) {
           await _storage.saveToken(accessToken);
           if (newRefreshToken != null) {
             await _storage.saveRefreshToken(newRefreshToken);
+          }
+          if (newIdToken != null) {
+            await _storage.saveIdToken(newIdToken);
+            print('[Cognito] New ID token stored during refresh');
           }
           return true;
         }
@@ -417,6 +426,7 @@ class CognitoService {
   Future<void> signOut() async {
     await _storage.clearToken();
     await _storage.clearRefreshToken();
+    await _storage.clearIdToken();
     await _storage.clearEmail();
     await _storage.clearPhoneNumber();
   }
