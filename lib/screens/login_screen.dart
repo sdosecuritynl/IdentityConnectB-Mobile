@@ -317,7 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Secure Identity Verification',
+                      'One Identity. Everywhere.',
                       style: AppTheme.bodyText.copyWith(
                         fontSize: 14,
                         color: AppTheme.textGrey,
