@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/encryption_service.dart';
 import '../services/cognito_service.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
 import 'home_screen.dart';
@@ -21,6 +22,7 @@ class _OTPScreenState extends State<OTPScreen> {
   final _authService = AuthService();
   final _encryptionService = EncryptionService();
   final _cognitoService = CognitoService();
+  final _notificationService = NotificationService();
   bool _isLoading = false;
   bool _otpSent = false;
   String? _error;
@@ -165,6 +167,19 @@ class _OTPScreenState extends State<OTPScreen> {
           final testData = {'test': 'data', 'timestamp': DateTime.now().toIso8601String()};
           final encrypted = await _encryptionService.encrypt(testData, publicKey);
           print('[OTP] Test encryption successful: ${encrypted.substring(0, 50)}...');
+          
+          // Register push notification token
+          print('[OTP] Registering push notification token...');
+          try {
+            final tokenRegistered = await _notificationService.registerStoredToken();
+            if (tokenRegistered) {
+              print('[OTP] Push notification token registered successfully');
+            } else {
+              print('[OTP] Push notification token registration failed (but continuing)');
+            }
+          } catch (e) {
+            print('[OTP] Error registering push notification token: $e (but continuing)');
+          }
           
           // Continue to main screen
           if (!mounted) return;
