@@ -127,16 +127,30 @@ class AuthService {
         return false;
       }
       
+      // Get device UUID
+      final uuid = await _storage.getUUID();
+      if (uuid == null) {
+        print('[Auth] Error: No device UUID available');
+        return false;
+      }
+      
+      // Prepare request body with phoneNumber, UUID, and OTP
+      final requestBody = {
+        "phoneNumber": phoneNumber,
+        "uuid": uuid,
+        "otp": otp,
+      };
+      
+      print('[Auth] Request body: ${jsonEncode(requestBody)}');
+      print('[Auth] Using bearer token (first 20 chars): ${idToken.substring(0, 20)}...');
+      
       final response = await http.post(
         Uri.parse('$_baseUrl/verifyOtp'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $idToken',
         },
-        body: jsonEncode({
-          'phoneNumber': phoneNumber,
-          'otp': otp,
-        }),
+        body: jsonEncode(requestBody),
       );
 
       print('[Auth] Verify OTP response status: ${response.statusCode}');
