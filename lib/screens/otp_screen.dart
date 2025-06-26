@@ -288,15 +288,31 @@ class _OTPScreenState extends State<OTPScreen> {
                       ),
               ),
             ),
-            if (_otpSent && _resendTimer > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Text(
-                  'Resend OTP in $_resendTimer seconds',
-                  textAlign: TextAlign.center,
-                  style: AppTheme.bodyText.copyWith(color: AppTheme.textGrey),
+            if (_otpSent) ...[
+              if (_resendTimer > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Text(
+                    'Resend OTP in $_resendTimer seconds',
+                    textAlign: TextAlign.center,
+                    style: AppTheme.bodyText.copyWith(color: AppTheme.textGrey),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: TextButton(
+                    onPressed: _isLoading ? null : _sendOTP,
+                    child: Text(
+                      'Resend OTP',
+                      style: AppTheme.bodyText.copyWith(
+                        color: AppTheme.primaryBlue,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+            ],
             const Spacer(),
             Padding(
               padding: const EdgeInsets.only(bottom: 24),
