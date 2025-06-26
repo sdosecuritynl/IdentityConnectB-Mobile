@@ -205,27 +205,27 @@ class _AppDrawerState extends State<AppDrawer> {
               _buildProtectionItem(
                 Icons.lock,
                 'End-to-End Encryption',
-                'All your personal data is encrypted using industry-standard encryption before being stored.',
+                'Your data is encrypted using industry-standard protocols. Only the authorized requestor can view the shared information.',
               ),
               _buildProtectionItem(
                 Icons.security,
                 'Secure Storage',
-                'Your sensitive information is stored in secure, encrypted storage on your device.',
+                'All your data is stored locally on your device in secure, encrypted storage systems.',
               ),
               _buildProtectionItem(
                 Icons.verified_user,
                 'Identity Verification',
-                'We use secure authentication methods to ensure only you can access your data.',
+                'Only authorized suppliers can request identity verification through our secure platform.',
               ),
               _buildProtectionItem(
-                Icons.shield,
+                Icons.minimize,
                 'Data Minimization',
-                'We only collect and store the minimum data necessary for our services.',
+                'We only store your email address and phone number. No additional personal data is collected.',
               ),
               _buildProtectionItem(
                 Icons.no_accounts,
                 'No Third-Party Sharing',
-                'Your personal data is never shared with third parties without your explicit consent.',
+                'We never share your data. Your information remains strictly confidential.',
               ),
             ],
           ),
