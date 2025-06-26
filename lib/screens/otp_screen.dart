@@ -49,6 +49,19 @@ class _OTPScreenState extends State<OTPScreen> {
     });
   }
 
+  String _sanitizePhoneNumber(String phoneNumber) {
+    // Remove any potentially harmful characters and keep only valid phone number characters
+    // Allow only digits, spaces, hyphens, parentheses, and plus sign
+    final sanitized = phoneNumber.replaceAll(RegExp(r'[^0-9\s\-\(\)\+]'), '');
+    
+    // Limit length to prevent extremely long strings
+    if (sanitized.length > 20) {
+      return '${sanitized.substring(0, 17)}...';
+    }
+    
+    return sanitized;
+  }
+
   Future<void> _backToLogin() async {
     setState(() {
       _isLoading = true;
@@ -105,7 +118,7 @@ class _OTPScreenState extends State<OTPScreen> {
             _error = null;
             _startResendTimer();
           } else {
-            _error = 'Failed to send OTP. Please try again.';
+            _error = 'Failed to send verification code. Please try again.';
           }
         });
       }
@@ -122,7 +135,7 @@ class _OTPScreenState extends State<OTPScreen> {
   Future<void> _verifyOTP() async {
     if (_otpController.text.isEmpty) {
       setState(() {
-        _error = 'Please enter the OTP code';
+        _error = 'Please enter the verification code';
       });
       return;
     }
@@ -183,7 +196,7 @@ class _OTPScreenState extends State<OTPScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _error = 'Invalid OTP code. Please try again.';
+          _error = 'Invalid verification code. Please try again.';
         });
       }
     } catch (e) {
@@ -213,7 +226,7 @@ class _OTPScreenState extends State<OTPScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Please verify your device by completing the OTP verification process.',
+              'Please verify your device by entering a phone number. We\'ll send you a verification code via SMS.',
               style: AppTheme.bodyText,
             ),
             const SizedBox(height: 32),
@@ -253,7 +266,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 ),
                 child: CustomTextField(
                   controller: _otpController,
-                  labelText: 'OTP Code',
+                  labelText: 'Verification Code',
                   prefixIcon: Icons.lock,
                   keyboardType: TextInputType.number,
                 ),
@@ -283,7 +296,7 @@ class _OTPScreenState extends State<OTPScreen> {
                         ),
                       )
                     : Text(
-                        _otpSent ? 'Verify OTP' : 'Send OTP',
+                        _otpSent ? 'Verify Code' : 'Send Code',
                         style: AppTheme.buttonText,
                       ),
               ),
@@ -293,7 +306,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: Text(
-                    'Resend OTP in $_resendTimer seconds',
+                    'Resend code in $_resendTimer seconds',
                     textAlign: TextAlign.center,
                     style: AppTheme.bodyText.copyWith(color: AppTheme.textGrey),
                   ),
@@ -304,7 +317,7 @@ class _OTPScreenState extends State<OTPScreen> {
                   child: TextButton(
                     onPressed: _isLoading ? null : _sendOTP,
                     child: Text(
-                      'Resend OTP',
+                      'Resend Code',
                       style: AppTheme.bodyText.copyWith(
                         color: AppTheme.primaryBlue,
                         fontWeight: FontWeight.w600,
