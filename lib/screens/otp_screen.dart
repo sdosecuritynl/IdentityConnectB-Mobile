@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../services/auth_service.dart';
 import '../services/encryption_service.dart';
 import '../services/cognito_service.dart';
 import '../services/notification_service.dart';
+import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
 import 'home_screen.dart';
@@ -23,6 +26,8 @@ class _OTPScreenState extends State<OTPScreen> {
   final _encryptionService = EncryptionService();
   final _cognitoService = CognitoService();
   final _notificationService = NotificationService();
+  final _storage = SecureStorageService();
+  static const String _baseUrl = 'https://d3oyxmwcqyuai5.cloudfront.net';
   bool _isLoading = false;
   bool _otpSent = false;
   String? _error;
@@ -62,6 +67,106 @@ class _OTPScreenState extends State<OTPScreen> {
     }
     
     return sanitized;
+  }
+
+  // Register public key with backend
+  Future<bool> _registerPublicKey(String publicKey) async {
+    try {
+      print('[OTP] Registering public key with backend...');
+      
+      // Get ID token for authentication
+      final idToken = await _storage.getIdToken();
+      if (idToken == null) {
+        print('[OTP] ❌ No ID token available for public key registration');
+        return false;
+      }
+
+      // Get device UUID
+      final uuid = await _storage.getUUID();
+      if (uuid == null) {
+        print('[OTP] ❌ No device UUID available for public key registration');
+        return false;
+      }
+
+      // Prepare request body
+      final requestBody = {
+        "publicKey": publicKey,
+        "uuid": uuid,
+      };
+
+      print('[OTP] Public key registration request body: ${jsonEncode(requestBody)}');
+      print('[OTP] Using bearer token (first 20 chars): ${idToken.substring(0, 20)}...');
+
+      // Make API request
+      final response = await http.post(
+        Uri.parse('$_baseUrl/registerPublicKey'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      print('[OTP] Public key registration response status: ${response.statusCode}');
+      print('[OTP] Public key registration response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        print('[OTP] ✅ Public key registered successfully');
+        return true;
+      } else {
+        print('[OTP] ❌ Failed to register public key: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      print('[OTP] ❌ Error registering public key: $e');
+      return false;
+    }
+  }
+
+  // Register UUID with backend
+  Future<bool> _registerUUID(String uuid) async {
+    try {
+      print('[OTP] Registering UUID with backend...');
+      
+      // Get ID token for authentication
+      final idToken = await _storage.getIdToken();
+      if (idToken == null) {
+        print('[OTP] ❌ No ID token available for UUID registration');
+        return false;
+      }
+
+      // Prepare request body
+      final requestBody = {
+        "uuid": uuid,
+      };
+
+      print('[OTP] UUID registration request body: ${jsonEncode(requestBody)}');
+      print('[OTP] Using bearer token (first 20 chars): ${idToken.substring(0, 20)}...');
+
+      // Make API request
+      final response = await http.post(
+        Uri.parse('$_baseUrl/registerUUID'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      print('[OTP] UUID registration response status: ${response.statusCode}');
+      print('[OTP] UUID registration response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        print('[OTP] ✅ UUID registered successfully');
+        return true;
+      } else {
+        print('[OTP] ❌ Failed to register UUID: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      print('[OTP] ❌ Error registering UUID: $e');
+      return false;
+    }
   }
 
   Future<void> _backToLogin() async {
@@ -168,6 +273,25 @@ class _OTPScreenState extends State<OTPScreen> {
           final encrypted = await _encryptionService.encrypt(testData, publicKey);
           print('[OTP] Test encryption successful: ${encrypted.substring(0, 50)}...');
           
+          // Get UUID for registrations
+          final uuid = await _storage.getUUID();
+          if (uuid == null) {
+            print('[OTP] ❌ No UUID available for backend registrations');
+            throw Exception('UUID not available');
+          }
+
+          // Register UUID with backend
+          try {
+            final uuidRegistered = await _registerUUID(uuid);
+            if (uuidRegistered) {
+              print('[OTP] UUID registered successfully');
+            } else {
+              print('[OTP] UUID registration failed (but continuing)');
+            }
+          } catch (e) {
+            print('[OTP] Error registering UUID: $e (but continuing)');
+          }
+          
           // Register push notification token
           print('[OTP] Registering push notification token...');
           try {
@@ -179,6 +303,18 @@ class _OTPScreenState extends State<OTPScreen> {
             }
           } catch (e) {
             print('[OTP] Error registering push notification token: $e (but continuing)');
+          }
+
+          // Register public key with backend
+          try {
+            final publicKeyRegistered = await _registerPublicKey(publicKey);
+            if (publicKeyRegistered) {
+              print('[OTP] Public key registered successfully');
+            } else {
+              print('[OTP] Public key registration failed (but continuing)');
+            }
+          } catch (e) {
+            print('[OTP] Error registering public key: $e (but continuing)');
           }
           
           // Continue to main screen
