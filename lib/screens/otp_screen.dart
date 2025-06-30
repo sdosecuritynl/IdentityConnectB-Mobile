@@ -169,6 +169,29 @@ class _OTPScreenState extends State<OTPScreen> {
     }
   }
 
+  // Show error dialog and return to login screen
+  void _showErrorAndReturnToLogin(String message) {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Registration Failed'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              _backToLogin(); // Return to login
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _backToLogin() async {
     setState(() {
       _isLoading = true;
@@ -280,41 +303,33 @@ class _OTPScreenState extends State<OTPScreen> {
             throw Exception('UUID not available');
           }
 
-          // Register UUID with backend
+          // Run all registrations in parallel for better performance
+          print('[OTP] Starting parallel registration of UUID, push token, and public key...');
           try {
-            final uuidRegistered = await _registerUUID(uuid);
-            if (uuidRegistered) {
-              print('[OTP] UUID registered successfully');
-            } else {
-              print('[OTP] UUID registration failed (but continuing)');
-            }
-          } catch (e) {
-            print('[OTP] Error registering UUID: $e (but continuing)');
-          }
-          
-          // Register push notification token
-          print('[OTP] Registering push notification token...');
-          try {
-            final tokenRegistered = await _notificationService.registerStoredToken();
-            if (tokenRegistered) {
-              print('[OTP] Push notification token registered successfully');
-            } else {
-              print('[OTP] Push notification token registration failed (but continuing)');
-            }
-          } catch (e) {
-            print('[OTP] Error registering push notification token: $e (but continuing)');
-          }
+            final results = await Future.wait([
+              _registerUUID(uuid),
+              _notificationService.registerStoredToken(),
+              _registerPublicKey(publicKey),
+            ]);
 
-          // Register public key with backend
-          try {
-            final publicKeyRegistered = await _registerPublicKey(publicKey);
-            if (publicKeyRegistered) {
-              print('[OTP] Public key registered successfully');
-            } else {
-              print('[OTP] Public key registration failed (but continuing)');
+            final uuidRegistered = results[0];
+            final tokenRegistered = results[1];
+            final publicKeyRegistered = results[2];
+
+            print('[OTP] Registration results - UUID: $uuidRegistered, Token: $tokenRegistered, PublicKey: $publicKeyRegistered');
+
+            // Check if any registration failed
+            if (!uuidRegistered || !tokenRegistered || !publicKeyRegistered) {
+              print('[OTP] ❌ One or more registrations failed');
+              _showErrorAndReturnToLogin('Registration failed. Please try logging in again.');
+              return;
             }
+
+            print('[OTP] ✅ All registrations completed successfully');
           } catch (e) {
-            print('[OTP] Error registering public key: $e (but continuing)');
+            print('[OTP] ❌ Error during parallel registrations: $e');
+            _showErrorAndReturnToLogin('Registration failed. Please try logging in again.');
+            return;
           }
           
           // Continue to main screen
