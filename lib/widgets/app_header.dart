@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../theme/app_theme.dart';
 import '../services/cognito_service.dart';
 import '../services/storage_service.dart';
@@ -111,6 +112,37 @@ class _AppDrawerState extends State<AppDrawer> {
     }
   }
 
+  Future<bool> _deleteUserFromBackend() async {
+    try {
+      // Get ID token for authentication
+      final idToken = await _storage.getIdToken();
+      if (idToken == null) {
+        print('[AppDrawer] No ID token available for user deletion');
+        return false;
+      }
+
+      print('[AppDrawer] Making DELETE request to /deleteUser');
+      print('[AppDrawer] Using bearer token (first 20 chars): ${idToken.substring(0, 20)}...');
+
+      // Make DELETE request to /deleteUser endpoint
+      final response = await http.delete(
+        Uri.parse('https://d3oyxmwcqyuai5.cloudfront.net/deleteUser'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+      );
+
+      print('[AppDrawer] Delete user response status: ${response.statusCode}');
+      print('[AppDrawer] Delete user response body: ${response.body}');
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('[AppDrawer] Error calling delete user API: $e');
+      return false;
+    }
+  }
+
   Future<void> _deleteAccount() async {
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
@@ -148,10 +180,18 @@ class _AppDrawerState extends State<AppDrawer> {
       setState(() => _isLoading = true);
       
       try {
-        // Clear all local data
-        await _cognitoService.signOut();
+        // Call delete user API first (before clearing local data)
+        print('[AppDrawer] Calling delete user API...');
+        final success = await _deleteUserFromBackend();
         
-        // TODO: Add API call to delete account from backend
+        if (!success) {
+          throw Exception('Failed to delete user from backend');
+        }
+        
+        print('[AppDrawer] User deleted from backend successfully, clearing local data...');
+        
+        // Clear all local data (cannot use proper Cognito signout after user deletion)
+        await _storage.clearAll();
         
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
