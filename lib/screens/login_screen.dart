@@ -1,13 +1,16 @@
 // File: screens/login_screen.dart
 import 'package:flutter/material.dart';
-import 'package:local_auth/local_auth.dart';
-import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../services/storage_service.dart';
 import '../services/device_service.dart';
 import '../services/cognito_service.dart';
+import '../services/encryption_service.dart';
+import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/custom_text_field.dart';
 import 'otp_screen.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -20,7 +23,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final SecureStorageService _storage = SecureStorageService();
   final DeviceService _deviceService = DeviceService();
   final CognitoService _cognitoService = CognitoService();
-  final LocalAuthentication _localAuth = LocalAuthentication();
   final _emailController = TextEditingController();
   bool _isLoading = false;
   String? _message;
@@ -30,38 +32,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _checkDeviceSecurity();
     _checkExistingAuth();
-    _authenticateWithFaceID();
-  }
-
-  Future<void> _authenticateWithFaceID() async {
-    try {
-      final isAvailable = await _localAuth.canCheckBiometrics;
-      final isDeviceSupported = await _localAuth.isDeviceSupported();
-      
-      if (isAvailable && isDeviceSupported) {
-        final bool didAuthenticate = await _localAuth.authenticate(
-          localizedReason: 'Please authenticate to access IdentityConnect',
-          options: const AuthenticationOptions(
-            biometricOnly: true,
-            stickyAuth: true,
-          ),
-        );
-
-        if (didAuthenticate) {
-          // Face ID successful - stay on login page
-          print('Face ID authentication successful - staying on login page');
-        } else {
-          // Face ID failed - let OS handle the default behavior
-          print('Face ID authentication failed - falling back to OS default behavior');
-        }
-      }
-    } on PlatformException catch (e) {
-      print('Face ID authentication error: ${e.message}');
-      // Let the OS handle the error with default behavior
-    } catch (e) {
-      print('Face ID authentication error: $e');
-      // Let the OS handle the error with default behavior
-    }
   }
 
   Future<void> _checkDeviceSecurity() async {
@@ -127,12 +97,27 @@ class _LoginScreenState extends State<LoginScreen> {
       final success = await _cognitoService.authenticate(context);
       
       if (success) {
-        print('[Login] Authentication successful, redirecting to OTP screen');
+        print('[Login] Email authentication successful, checking registration status...');
         if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const OTPScreen()),
-        );
+        
+        // Check if user is already registered
+        final isRegistered = await _checkIfUserIsRegistered();
+        
+        if (mounted) {
+          if (isRegistered) {
+            print('[Login] User is already registered, navigating to main screen');
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const MainScreen()),
+            );
+          } else {
+            print('[Login] User is not registered, navigating to OTP screen');
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const OTPScreen()),
+            );
+          }
+        }
       } else {
         setState(() {
           _message = 'Authentication failed. Please try again.';
@@ -185,15 +170,25 @@ class _LoginScreenState extends State<LoginScreen> {
       final success = await _cognitoService.authenticate(context);
       
       if (success) {
-        print('[Login] Google authentication successful, navigating to OTP screen');
+        print('[Login] Google authentication successful, checking registration status...');
         if (mounted) {
-          // Add small delay to ensure all state is properly set
-          await Future.delayed(const Duration(milliseconds: 100));
+          // Check if user is already registered
+          final isRegistered = await _checkIfUserIsRegistered();
+          
           if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const OTPScreen()),
-            );
+            if (isRegistered) {
+              print('[Login] User is already registered, navigating to home screen');
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const MainScreen()),
+              );
+            } else {
+              print('[Login] User is not registered, navigating to OTP screen');
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const OTPScreen()),
+              );
+            }
           }
         }
       } else {
@@ -241,15 +236,25 @@ class _LoginScreenState extends State<LoginScreen> {
       final success = await _cognitoService.authenticate(context);
       
       if (success) {
-        print('[Login] Facebook authentication successful, navigating to OTP screen');
+        print('[Login] Facebook authentication successful, checking registration status...');
         if (mounted) {
-          // Add small delay to ensure all state is properly set
-          await Future.delayed(const Duration(milliseconds: 100));
+          // Check if user is already registered
+          final isRegistered = await _checkIfUserIsRegistered();
+          
           if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const OTPScreen()),
-            );
+            if (isRegistered) {
+              print('[Login] User is already registered, navigating to main screen');
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const MainScreen()),
+              );
+            } else {
+              print('[Login] User is not registered, navigating to OTP screen');
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const OTPScreen()),
+              );
+            }
           }
         }
       } else {
@@ -288,6 +293,62 @@ class _LoginScreenState extends State<LoginScreen> {
     final domain = email.toLowerCase().split('@').last;
     final socialDomains = ['gmail.com', 'icloud.com', 'facebook.com'];
     return socialDomains.contains(domain);
+  }
+
+  Future<bool> _checkIfUserIsRegistered() async {
+    try {
+      print('[Login] Checking if user is already registered...');
+      
+      // Get required data for registration check
+      final deviceService = DeviceService();
+      final encryptionService = EncryptionService();
+      final notificationService = NotificationService();
+      
+      final deviceUuid = await deviceService.getOrGenerateUUID();
+      await encryptionService.generateKeyPairIfNeeded();
+      final publicKeyPem = await encryptionService.getPublicKey();
+      final deviceToken = await notificationService.getDeviceToken();
+      
+      // Make the registration check request
+      final idToken = await _storage.getIdToken();
+      if (idToken == null) {
+        print('[Login] No ID token available for registration check');
+        return false;
+      }
+
+      final requestBody = {
+        "uuid": deviceUuid,
+        "publicKey": publicKeyPem,
+        if (deviceToken != null) "deviceToken": deviceToken,
+      };
+
+      print('[Login] Registration check request body: ${jsonEncode(requestBody)}');
+      print('[Login] Using bearer token (first 20 chars): ${idToken.substring(0, 20)}...');
+
+      final response = await http.post(
+        Uri.parse('https://d3oyxmwcqyuai5.cloudfront.net/isRegisteredUser'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $idToken',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      print('[Login] Registration check response: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final isRegistered = responseData['registered'] ?? false;
+        print('[Login] User registered status: $isRegistered');
+        return isRegistered;
+      } else {
+        print('[Login] Registration check failed with status: ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      print('[Login] Error checking registration status: $e');
+      return false;
+    }
   }
 
   @override

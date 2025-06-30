@@ -37,7 +37,6 @@ class _OTPScreenState extends State<OTPScreen> {
   @override
   void initState() {
     super.initState();
-    _checkIfUserIsRegistered();
   }
 
   @override
@@ -75,74 +74,7 @@ class _OTPScreenState extends State<OTPScreen> {
     return sanitized;
   }
 
-  // Check if user is already registered
-  Future<void> _checkIfUserIsRegistered() async {
-    try {
-      print('[OTP] Checking if user is already registered...');
-      
-      // Get ID token for authentication
-      final idToken = await _storage.getIdToken();
-      if (idToken == null) {
-        print('[OTP] No ID token available, proceeding with registration flow');
-        return;
-      }
 
-      // Get required data for the check
-      final uuid = await _storage.getUUID();
-      final publicKey = await _encryptionService.getPublicKey();
-      final deviceToken = await _notificationService.getDeviceToken();
-
-      if (uuid == null || publicKey.isEmpty) {
-        print('[OTP] Missing UUID or public key, proceeding with registration flow');
-        return;
-      }
-
-      // Prepare request body
-      final requestBody = {
-        "uuid": uuid,
-        "publicKey": publicKey,
-        if (deviceToken != null) "deviceToken": deviceToken,
-      };
-
-      print('[OTP] Checking registration status...');
-      print('[OTP] Using bearer token (first 20 chars): ${idToken.substring(0, 20)}...');
-
-      // Make API request
-      final response = await http.post(
-        Uri.parse('$_baseUrl/isRegisteredUser'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $idToken',
-        },
-        body: jsonEncode(requestBody),
-      );
-
-      print('[OTP] Registration check response status: ${response.statusCode}');
-      print('[OTP] Registration check response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        final isRegistered = responseData['registered'] ?? false;
-        
-        if (isRegistered) {
-          print('[OTP] ✅ User is already registered, navigating to main screen');
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const MainScreen()),
-            );
-          }
-          return;
-        } else {
-          print('[OTP] User is not registered, proceeding with OTP flow');
-        }
-      } else {
-        print('[OTP] Registration check failed, proceeding with OTP flow');
-      }
-    } catch (e) {
-      print('[OTP] Error checking registration status: $e, proceeding with OTP flow');
-    }
-  }
 
   // Register public key with backend
   Future<bool> _registerPublicKey(String publicKey) async {
