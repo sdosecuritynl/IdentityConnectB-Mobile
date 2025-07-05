@@ -1,13 +1,24 @@
 PODS:
   - device_info_plus (0.0.1):
     - Flutter
+  - DocumentReaderFullRFID (8.1.12876)
+  - DocumentReaderNightly (8.2.4809):
+    - RegulaCommonNightly (= 8.2.1327)
   - Flutter (1.0.0)
+  - flutter_document_reader_api (8.2.322-nightly):
+    - DocumentReaderNightly (= 8.2.4809)
+    - Flutter
+  - flutter_document_reader_core_fullrfid (8.1.427):
+    - DocumentReaderFullRFID (= 8.1.12876)
+    - Flutter
   - flutter_jailbreak_detection (1.0.0):
     - Flutter
     - IOSSecuritySuite
   - flutter_secure_storage (6.0.0):
     - Flutter
   - flutter_web_auth_2 (3.0.0):
+    - Flutter
+  - image_picker_ios (0.0.1):
     - Flutter
   - IOSSecuritySuite (2.1.0)
   - local_auth_darwin (0.0.1):
@@ -16,6 +27,9 @@ PODS:
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - permission_handler_apple (9.3.0):
+    - Flutter
+  - RegulaCommonNightly (8.2.1327)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -25,33 +39,48 @@ PODS:
 DEPENDENCIES:
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
+  - flutter_document_reader_api (from `.symlinks/plugins/flutter_document_reader_api/ios`)
+  - flutter_document_reader_core_fullrfid (from `.symlinks/plugins/flutter_document_reader_core_fullrfid/ios`)
   - flutter_jailbreak_detection (from `.symlinks/plugins/flutter_jailbreak_detection/ios`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - flutter_web_auth_2 (from `.symlinks/plugins/flutter_web_auth_2/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
   trunk:
+    - DocumentReaderFullRFID
+    - DocumentReaderNightly
     - IOSSecuritySuite
+    - RegulaCommonNightly
 
 EXTERNAL SOURCES:
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
   Flutter:
     :path: Flutter
+  flutter_document_reader_api:
+    :path: ".symlinks/plugins/flutter_document_reader_api/ios"
+  flutter_document_reader_core_fullrfid:
+    :path: ".symlinks/plugins/flutter_document_reader_core_fullrfid/ios"
   flutter_jailbreak_detection:
     :path: ".symlinks/plugins/flutter_jailbreak_detection/ios"
   flutter_secure_storage:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
   flutter_web_auth_2:
     :path: ".symlinks/plugins/flutter_web_auth_2/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
   local_auth_darwin:
     :path: ".symlinks/plugins/local_auth_darwin/darwin"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
   url_launcher_ios:
@@ -59,13 +88,20 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   device_info_plus: 335f3ce08d2e174b9fdc3db3db0f4e3b1f66bd89
+  DocumentReaderFullRFID: 721e543b32d928e7a599de2e71e142b39c375656
+  DocumentReaderNightly: e28c8d30985169a164fb2a1cce47830ddbea5b49
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_document_reader_api: 89e49bd0d87e060c977feba5b70bd0139559967a
+  flutter_document_reader_core_fullrfid: fe09381d696ab707390d689cf23addde688d8892
   flutter_jailbreak_detection: a74360daaf5cbc80639959463b4b1395873c90b5
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
   flutter_web_auth_2: 3464a7c16dc6480b6194fc89913bae6e82f28405
+  image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
   IOSSecuritySuite: 45e8531b05ffa72b5661cbdb5b5b5648a8de1a84
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
+  RegulaCommonNightly: 47b4001a9d309e28504a14a1d9abf19397d66269
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
 
