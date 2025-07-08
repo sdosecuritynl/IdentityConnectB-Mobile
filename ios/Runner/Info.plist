@@ -66,7 +66,17 @@
 	<string>Bluetooth is used for device identification and security verification.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required for Face ID authentication.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>We use Face ID to securely authenticate you.</string>
 	<key>io.flutter.embedded_views_preview</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-processing</string>
+	</array>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIRequiresFullScreen</key>
 	<true/>
 </dict>
 </plist>
