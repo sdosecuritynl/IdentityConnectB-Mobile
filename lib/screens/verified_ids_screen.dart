@@ -82,8 +82,8 @@ class _VerifiedIDsScreenState extends State<VerifiedIDsScreen> {
                 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Regula initialized and document processing started!'),
-                    duration: Duration(seconds: 2),
+                    content: Text('Document scanning started! Position your ID in the camera frame and ensure good lighting.'),
+                    duration: Duration(seconds: 4),
                   ),
                 );
               },
