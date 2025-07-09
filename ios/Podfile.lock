@@ -1,7 +1,16 @@
 PODS:
   - device_info_plus (0.0.1):
     - Flutter
+  - DocumentReader (8.1.4772):
+    - RegulaCommon (= 8.1.1294)
+  - DocumentReaderFullAuth (8.1.12883)
   - Flutter (1.0.0)
+  - flutter_document_reader_api (8.1.306):
+    - DocumentReader (= 8.1.4772)
+    - Flutter
+  - flutter_document_reader_core_fullauth (8.1.434):
+    - DocumentReaderFullAuth (= 8.1.12883)
+    - Flutter
   - flutter_jailbreak_detection (1.0.0):
     - Flutter
     - IOSSecuritySuite
@@ -16,6 +25,7 @@ PODS:
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - RegulaCommon (8.1.1294)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -25,6 +35,8 @@ PODS:
 DEPENDENCIES:
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
+  - flutter_document_reader_api (from `.symlinks/plugins/flutter_document_reader_api/ios`)
+  - flutter_document_reader_core_fullauth (from `.symlinks/plugins/flutter_document_reader_core_fullauth/ios`)
   - flutter_jailbreak_detection (from `.symlinks/plugins/flutter_jailbreak_detection/ios`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - flutter_web_auth_2 (from `.symlinks/plugins/flutter_web_auth_2/ios`)
@@ -35,13 +47,20 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - DocumentReader
+    - DocumentReaderFullAuth
     - IOSSecuritySuite
+    - RegulaCommon
 
 EXTERNAL SOURCES:
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
   Flutter:
     :path: Flutter
+  flutter_document_reader_api:
+    :path: ".symlinks/plugins/flutter_document_reader_api/ios"
+  flutter_document_reader_core_fullauth:
+    :path: ".symlinks/plugins/flutter_document_reader_core_fullauth/ios"
   flutter_jailbreak_detection:
     :path: ".symlinks/plugins/flutter_jailbreak_detection/ios"
   flutter_secure_storage:
@@ -59,16 +78,21 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   device_info_plus: 335f3ce08d2e174b9fdc3db3db0f4e3b1f66bd89
+  DocumentReader: d66a1ee05fb77bad121fec7da6268f1289f91a31
+  DocumentReaderFullAuth: 4b39f5af4f69633e5b673e4c40358f22c30a5e2b
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_document_reader_api: 6927fe36f244b6e5a195f1964eaaf0572ab6a3d1
+  flutter_document_reader_core_fullauth: 0e9c75cae1a7ceee83847fa8dbc78fca97e4532f
   flutter_jailbreak_detection: a74360daaf5cbc80639959463b4b1395873c90b5
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
   flutter_web_auth_2: 3464a7c16dc6480b6194fc89913bae6e82f28405
   IOSSecuritySuite: 45e8531b05ffa72b5661cbdb5b5b5648a8de1a84
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  RegulaCommon: 5b48eb586906e5cabd1c6c82bdab040bc0fa2bf7
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
 
-PODFILE CHECKSUM: 251cb053df7158f337c0712f2ab29f4e0fa474ce
+PODFILE CHECKSUM: 3f03fc047263b31b26dcf704d85a5c8d071c6c0c
 
 COCOAPODS: 1.16.2

@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_header.dart';
+import '../services/regula.dart';
 
-class VerifiedIDsScreen extends StatelessWidget {
+class VerifiedIDsScreen extends StatefulWidget {
   const VerifiedIDsScreen({super.key});
+
+  @override
+  State<VerifiedIDsScreen> createState() => _VerifiedIDsScreenState();
+}
+
+class _VerifiedIDsScreenState extends State<VerifiedIDsScreen> {
+  final RegulaService _regulaService = RegulaService();
 
   @override
   Widget build(BuildContext context) {
@@ -46,12 +54,36 @@ class VerifiedIDsScreen extends StatelessWidget {
             right: 16,
             bottom: 16,
             child: FloatingActionButton(
-              onPressed: () {
-                // Functionality will be added later
+              onPressed: () async {
+                // Start Regula service when "+" button is pressed
+                print('Starting Regula service...');
+                
+                // Initialize license first
+                final licenseInitialized = await _regulaService.initializeLicense();
+                if (!licenseInitialized) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Failed to initialize Regula license'),
+                      backgroundColor: Colors.red,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                  return;
+                }
+                
+                // Print all available scenarios
+                await _regulaService.printAllScenarios();
+                
+                // Prepare and download database
+                await _regulaService.prepareAndDownloadDatabase();
+                
+                // Start document processing
+                await _regulaService.startDocumentProcessing();
+                
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Coming soon!'),
-                    duration: Duration(seconds: 1),
+                    content: Text('Regula initialized and document processing started!'),
+                    duration: Duration(seconds: 2),
                   ),
                 );
               },

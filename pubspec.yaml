@@ -22,6 +22,10 @@ dependencies:
   url_launcher: ^6.2.1
   http: ^1.1.0
   local_auth: ^2.1.6
+  # Regula Document Reader SDK - Use latest versions as per official docs
+  flutter_document_reader_api: any
+  flutter_document_reader_core_fullauth: any
+  
 
 dev_dependencies:
   flutter_test:
@@ -33,6 +37,7 @@ flutter:
   assets:
     - assets/logo.png
     - assets/empty_ids.png
+    - assets/regula.license
     - assets/icons/google_logo.png
     - assets/icons/apple_logo.png
     - assets/icons/facebook_logo.png
