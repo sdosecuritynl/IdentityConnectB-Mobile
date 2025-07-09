@@ -47,12 +47,27 @@ class _LoginScreenState extends State<LoginScreen> {
     // Check if user is already authenticated
     final isAuthenticated = await _cognitoService.isAuthenticated();
     if (isAuthenticated) {
-      print('[Login] User already authenticated, redirecting to OTP screen');
+      print('[Login] User already authenticated, checking registration status...');
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const OTPScreen()),
-      );
+      
+      // Check if user is already registered
+      final isRegistered = await _checkIfUserIsRegistered();
+      
+      if (mounted) {
+        if (isRegistered) {
+          print('[Login] User is already registered, navigating to main screen');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const MainScreen()),
+          );
+        } else {
+          print('[Login] User is not registered, navigating to OTP screen');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const OTPScreen()),
+          );
+        }
+      }
     }
   }
 
