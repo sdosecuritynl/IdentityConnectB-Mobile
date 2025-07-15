@@ -4,6 +4,9 @@
 import 'package:flutter_document_reader_api/flutter_document_reader_api.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import '../models/verified_id.dart';
+import 'storage_service.dart';
 
 class RegulaService {
   bool _isInitialized = false;
@@ -137,34 +140,24 @@ class RegulaService {
     }
 
     try {
-      // Extract text fields (following example pattern)
-      var name = await results.textFieldValueByType(FieldType.SURNAME_AND_GIVEN_NAMES);
-      print('Extracted name: $name');
+      // Extract all required information
+      var extractedData = await _extractDocumentData(results);
       
-      // Extract document image
-      var docImage = await results.graphicFieldImageByType(GraphicFieldType.DOCUMENT_IMAGE);
-      print('Document image extracted: ${docImage != null}');
-      
-      // Extract portrait
-      var portrait = await results.graphicFieldImageByType(GraphicFieldType.PORTRAIT);
-      print('Portrait extracted: ${portrait != null}');
-      
-      // Try to get RFID portrait if available (following example pattern)
-      var rfidPortrait = await results.graphicFieldImageByTypeSource(
-        GraphicFieldType.PORTRAIT,
-        ResultType.RFID_IMAGE_DATA,
-      );
-      if (rfidPortrait != null) {
-        portrait = rfidPortrait;
-        print('RFID portrait used');
-      }
-      
-      // Process results
-      _processDocumentResults(results);
-      
-      // Call completion callback with results
-      if (_completionCallback != null) {
-        _completionCallback!(DocReaderAction.COMPLETE, results, null);
+      if (extractedData != null) {
+        // Save to secure storage
+        final storageService = SecureStorageService();
+        await storageService.saveVerifiedID(extractedData);
+        print('Verified ID saved to secure storage');
+        
+        // Call completion callback with extracted data
+        if (_completionCallback != null) {
+          _completionCallback!(DocReaderAction.COMPLETE, extractedData, null);
+        }
+      } else {
+        print('Failed to extract document data');
+        if (_completionCallback != null) {
+          _completionCallback!(DocReaderAction.ERROR, null, 'Failed to extract document data');
+        }
       }
       
     } catch (e) {
@@ -172,6 +165,69 @@ class RegulaService {
       if (_completionCallback != null) {
         _completionCallback!(DocReaderAction.ERROR, null, e);
       }
+    }
+  }
+
+  // Extract all required document data
+  Future<VerifiedID?> _extractDocumentData(dynamic results) async {
+    try {
+      // Extract text fields
+      var name = await results.textFieldValueByType(FieldType.SURNAME_AND_GIVEN_NAMES);
+      var documentNumber = await results.textFieldValueByType(FieldType.DOCUMENT_NUMBER);
+      var dateOfExpiry = await results.textFieldValueByType(FieldType.DATE_OF_EXPIRY);
+      var dateOfBirth = await results.textFieldValueByType(FieldType.DATE_OF_BIRTH);
+      var personalNumber = await results.textFieldValueByType(FieldType.PERSONAL_NUMBER);
+      var nationality = await results.textFieldValueByType(FieldType.NATIONALITY);
+      var sex = await results.textFieldValueByType(FieldType.SEX);
+      var age = await results.textFieldValueByType(FieldType.AGE);
+      // Get MRZ from text fields instead of direct field type
+      var mrz = '';
+      if (results.textResult?.fields != null) {
+        for (var field in results.textResult!.fields!) {
+          if (field.fieldName == 'MRZ lines') {
+            mrz = field.value ?? '';
+            break;
+          }
+        }
+      }
+      
+      // Get document type
+      String documentType = 'Unknown';
+      if (results.documentType != null && results.documentType.isNotEmpty) {
+        documentType = results.documentType.first.name;
+      }
+      
+      // Extract document image as base64
+      String? documentPhotoBase64;
+      try {
+        var docImage = await results.graphicFieldImageByType(GraphicFieldType.DOCUMENT_IMAGE);
+        if (docImage != null) {
+          documentPhotoBase64 = base64Encode(docImage);
+        }
+      } catch (e) {
+        print('Error encoding document image: $e');
+      }
+      
+      // Create VerifiedID object
+      return VerifiedID(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        extractedName: name ?? 'Unknown',
+        documentType: documentType,
+        documentNumber: documentNumber ?? 'Unknown',
+        dateOfExpiry: dateOfExpiry ?? 'Unknown',
+        dateOfBirth: dateOfBirth ?? 'Unknown',
+        personalNumber: personalNumber ?? 'Unknown',
+        nationality: nationality ?? 'Unknown',
+        sex: sex ?? 'Unknown',
+        age: age ?? 'Unknown',
+        mrz: mrz ?? 'Unknown',
+        documentPhotoBase64: documentPhotoBase64,
+        createdAt: DateTime.now(),
+      );
+      
+    } catch (e) {
+      print('Error extracting document data: $e');
+      return null;
     }
   }
 

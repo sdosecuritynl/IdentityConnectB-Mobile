@@ -1,5 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/verified_id.dart';
 
 class SecureStorageService {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -279,5 +281,68 @@ class SecureStorageService {
     await clearToken();
     await clearRefreshToken();
     await clearIdToken();
+  }
+
+  // Verified IDs operations (secure storage)
+  static const String _verifiedIdsKey = 'verified_ids';
+
+  Future<void> saveVerifiedID(VerifiedID verifiedID) async {
+    print('[Storage] Saving verified ID: ${verifiedID.documentNumber}');
+    
+    // Get existing IDs
+    List<VerifiedID> existingIDs = await getVerifiedIDs();
+    
+    // Add new ID
+    existingIDs.add(verifiedID);
+    
+    // Convert to JSON and save
+    List<Map<String, dynamic>> jsonList = existingIDs.map((id) => id.toJson()).toList();
+    String jsonString = jsonEncode(jsonList);
+    
+    await _secureStorage.write(key: _verifiedIdsKey, value: jsonString);
+    print('[Storage] Verified ID saved successfully');
+  }
+
+  Future<List<VerifiedID>> getVerifiedIDs() async {
+    print('[Storage] Retrieving verified IDs');
+    
+    String? jsonString = await _secureStorage.read(key: _verifiedIdsKey);
+    
+    if (jsonString == null || jsonString.isEmpty) {
+      print('[Storage] No verified IDs found');
+      return [];
+    }
+    
+    try {
+      List<dynamic> jsonList = jsonDecode(jsonString);
+      List<VerifiedID> verifiedIDs = jsonList
+          .map((json) => VerifiedID.fromJson(json))
+          .toList();
+      
+      print('[Storage] Retrieved ${verifiedIDs.length} verified IDs');
+      return verifiedIDs;
+    } catch (e) {
+      print('[Storage] Error parsing verified IDs: $e');
+      return [];
+    }
+  }
+
+  Future<void> clearVerifiedIDs() async {
+    print('[Storage] Clearing all verified IDs');
+    await _secureStorage.delete(key: _verifiedIdsKey);
+  }
+
+  Future<void> deleteVerifiedID(String id) async {
+    print('[Storage] Deleting verified ID: $id');
+    
+    List<VerifiedID> existingIDs = await getVerifiedIDs();
+    existingIDs.removeWhere((verifiedID) => verifiedID.id == id);
+    
+    // Save updated list
+    List<Map<String, dynamic>> jsonList = existingIDs.map((id) => id.toJson()).toList();
+    String jsonString = jsonEncode(jsonList);
+    
+    await _secureStorage.write(key: _verifiedIdsKey, value: jsonString);
+    print('[Storage] Verified ID deleted successfully');
   }
 }
