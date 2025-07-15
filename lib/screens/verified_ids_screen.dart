@@ -36,11 +36,24 @@ class _VerifiedIDsScreenState extends State<VerifiedIDsScreen> {
         _verifiedIDs = verifiedIDs;
         _isLoading = false;
       });
+      
+
+      
     } catch (e) {
       print('Error loading verified IDs: $e');
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  // Clear all existing verified IDs
+  Future<void> _clearAllVerifiedIDs() async {
+    try {
+      await _storageService.clearVerifiedIDs();
+      print('All existing verified IDs cleared');
+    } catch (e) {
+      print('Error clearing verified IDs: $e');
     }
   }
 
@@ -57,6 +70,9 @@ class _VerifiedIDsScreenState extends State<VerifiedIDsScreen> {
               : _buildVerifiedIDsList(),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
+          // Clear existing verified IDs first (allow only one identity)
+          await _clearAllVerifiedIDs();
+          
           // Start full authentication flow when "+" button is pressed
           print('Starting full authentication flow...');
           
@@ -180,7 +196,7 @@ class _VerifiedIDsScreenState extends State<VerifiedIDsScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Your verified IDs will appear here.',
+            'Your verified identity will appear here.',
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey,
