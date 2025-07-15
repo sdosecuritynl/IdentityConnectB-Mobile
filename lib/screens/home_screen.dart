@@ -5,6 +5,7 @@ import 'verified_ids_screen.dart';
 import 'addresses_screen.dart';
 import 'suppliers_screen.dart';
 import 'my_information_screen.dart';
+import 'secure_mailbox_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -76,7 +77,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          const MyInformationScreen(), // My Info tab
+          const SecureMailboxScreen(), // Secure Mailbox tab
           const VerifiedIDsScreen(), // IDs tab
           const AddressesScreen(), // Addresses tab
           const SuppliersScreen(), // Suppliers tab
@@ -112,8 +113,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ),
           items: [
             BottomNavigationBarItem(
-              icon: _buildIcon(Icons.person_outline, 0),
-              label: 'My Info',
+              icon: _buildIcon(Icons.mail_lock, 0),
+              label: 'Mailbox',
             ),
             BottomNavigationBarItem(
               icon: _buildIcon(Icons.credit_card, 1),
