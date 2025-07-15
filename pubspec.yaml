@@ -24,7 +24,9 @@ dependencies:
   local_auth: ^2.1.6
   # Regula Document Reader SDK - Use latest versions as per official docs
   flutter_document_reader_api: any
-  flutter_document_reader_core_fullauth: any
+  flutter_document_reader_core_fullauthrfid: 8.1.426
+  flutter_document_reader_btdevice: 7.6.17
+  image_picker: ^1.1.2
   
 
 dev_dependencies:

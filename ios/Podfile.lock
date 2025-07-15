@@ -1,15 +1,19 @@
 PODS:
+  - BTDevice (7.6.419)
   - device_info_plus (0.0.1):
     - Flutter
   - DocumentReader (8.1.4772):
     - RegulaCommon (= 8.1.1294)
-  - DocumentReaderFullAuth (8.1.12883)
+  - DocumentReaderFullAuthRFID (8.1.12889)
   - Flutter (1.0.0)
   - flutter_document_reader_api (8.1.306):
     - DocumentReader (= 8.1.4772)
     - Flutter
-  - flutter_document_reader_core_fullauth (8.1.434):
-    - DocumentReaderFullAuth (= 8.1.12883)
+  - flutter_document_reader_btdevice (7.6.17):
+    - BTDevice (= 7.6.419)
+    - Flutter
+  - flutter_document_reader_core_fullauthrfid (8.1.426):
+    - DocumentReaderFullAuthRFID (= 8.1.12889)
     - Flutter
   - flutter_jailbreak_detection (1.0.0):
     - Flutter
@@ -17,6 +21,8 @@ PODS:
   - flutter_secure_storage (6.0.0):
     - Flutter
   - flutter_web_auth_2 (3.0.0):
+    - Flutter
+  - image_picker_ios (0.0.1):
     - Flutter
   - IOSSecuritySuite (2.1.0)
   - local_auth_darwin (0.0.1):
@@ -36,10 +42,12 @@ DEPENDENCIES:
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
   - flutter_document_reader_api (from `.symlinks/plugins/flutter_document_reader_api/ios`)
-  - flutter_document_reader_core_fullauth (from `.symlinks/plugins/flutter_document_reader_core_fullauth/ios`)
+  - flutter_document_reader_btdevice (from `.symlinks/plugins/flutter_document_reader_btdevice/ios`)
+  - flutter_document_reader_core_fullauthrfid (from `.symlinks/plugins/flutter_document_reader_core_fullauthrfid/ios`)
   - flutter_jailbreak_detection (from `.symlinks/plugins/flutter_jailbreak_detection/ios`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - flutter_web_auth_2 (from `.symlinks/plugins/flutter_web_auth_2/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -47,8 +55,9 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - BTDevice
     - DocumentReader
-    - DocumentReaderFullAuth
+    - DocumentReaderFullAuthRFID
     - IOSSecuritySuite
     - RegulaCommon
 
@@ -59,14 +68,18 @@ EXTERNAL SOURCES:
     :path: Flutter
   flutter_document_reader_api:
     :path: ".symlinks/plugins/flutter_document_reader_api/ios"
-  flutter_document_reader_core_fullauth:
-    :path: ".symlinks/plugins/flutter_document_reader_core_fullauth/ios"
+  flutter_document_reader_btdevice:
+    :path: ".symlinks/plugins/flutter_document_reader_btdevice/ios"
+  flutter_document_reader_core_fullauthrfid:
+    :path: ".symlinks/plugins/flutter_document_reader_core_fullauthrfid/ios"
   flutter_jailbreak_detection:
     :path: ".symlinks/plugins/flutter_jailbreak_detection/ios"
   flutter_secure_storage:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
   flutter_web_auth_2:
     :path: ".symlinks/plugins/flutter_web_auth_2/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
   local_auth_darwin:
     :path: ".symlinks/plugins/local_auth_darwin/darwin"
   path_provider_foundation:
@@ -77,15 +90,18 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
+  BTDevice: 86105ab20faef7bb66de90739a0f7a4405608b8b
   device_info_plus: 335f3ce08d2e174b9fdc3db3db0f4e3b1f66bd89
   DocumentReader: d66a1ee05fb77bad121fec7da6268f1289f91a31
-  DocumentReaderFullAuth: 4b39f5af4f69633e5b673e4c40358f22c30a5e2b
+  DocumentReaderFullAuthRFID: 6fa1cd02e97035c49bdac002ea1a8afa470eae5b
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_document_reader_api: 6927fe36f244b6e5a195f1964eaaf0572ab6a3d1
-  flutter_document_reader_core_fullauth: 0e9c75cae1a7ceee83847fa8dbc78fca97e4532f
+  flutter_document_reader_btdevice: 258b1905386fd5594ef40561f19629177d66ea03
+  flutter_document_reader_core_fullauthrfid: 3cf0335daad3012e68bb5a54962d88775987b149
   flutter_jailbreak_detection: a74360daaf5cbc80639959463b4b1395873c90b5
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
   flutter_web_auth_2: 3464a7c16dc6480b6194fc89913bae6e82f28405
+  image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
   IOSSecuritySuite: 45e8531b05ffa72b5661cbdb5b5b5648a8de1a84
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
